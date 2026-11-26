@@ -6,7 +6,7 @@ import math
 from datetime import time
 from typing import Any
 
-from .hours import format_day_hours, format_weekly_hours, is_open_at
+from .hours import format_day_hours, format_weekly_hours, is_open_at, is_open_during
 
 
 SENTIMENT_WEIGHT = 0.45
@@ -22,7 +22,8 @@ def rank_restaurants(
     minimum_mentions: int,
     open_only: bool,
     visit_day: str | None = None,
-    visit_time: time | None = None,
+    visit_start_time: time | None = None,
+    visit_end_time: time | None = None,
 ) -> list[dict[str, Any]]:
     """Rank restaurants using Bayesian sentiment and logarithmic review volume."""
     restaurant_by_id = {row["business_id"]: row for row in restaurants}
@@ -38,11 +39,20 @@ def rank_restaurants(
         )
         and (
             visit_day is None
-            or visit_time is None
-            or is_open_at(
-                restaurant_by_id[row["business_id"]].get("hours_json"),
-                visit_day,
-                visit_time,
+            or visit_start_time is None
+            or (
+                is_open_during(
+                    restaurant_by_id[row["business_id"]].get("hours_json"),
+                    visit_day,
+                    visit_start_time,
+                    visit_end_time,
+                )
+                if visit_end_time is not None
+                else is_open_at(
+                    restaurant_by_id[row["business_id"]].get("hours_json"),
+                    visit_day,
+                    visit_start_time,
+                )
             )
         )
     ]
