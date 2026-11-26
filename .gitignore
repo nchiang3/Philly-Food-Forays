@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local secrets
+.env
+.streamlit/secrets.toml
+
+# Raw Yelp Open Dataset files (large; keep local only)
+Yelp JSON/
+yelp_academic_dataset_*.json
+*.tar
+*.tar.gz
+
+# Future raw-data location
+data/raw/
+
