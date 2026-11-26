@@ -44,6 +44,22 @@ REVIEW_FIELDS = (
     "date",
 )
 
+# Yelp does not label every food-serving business as a Restaurant. These
+# additional categories retain bakeries, water-ice shops, pretzel shops, delis,
+# and similar specialty businesses needed for the seven signature foods.
+FOOD_BUSINESS_CATEGORIES = {
+    "bakeries",
+    "delis",
+    "desserts",
+    "food stands",
+    "ice cream & frozen yogurt",
+    "pizza",
+    "pretzels",
+    "restaurants",
+    "sandwiches",
+    "shaved ice",
+}
+
 
 def iter_jsonl(path: Path) -> Iterable[tuple[int, dict[str, Any] | None]]:
     """Yield line numbers and decoded objects, returning None for bad lines."""
@@ -72,7 +88,9 @@ def is_target_restaurant(
         return False
     if state and str(business.get("state", "")).strip().casefold() != state.casefold():
         return False
-    if "restaurants" not in category_tokens(business.get("categories")):
+    if not FOOD_BUSINESS_CATEGORIES.intersection(
+        category_tokens(business.get("categories"))
+    ):
         return False
     return not open_only or business.get("is_open") == 1
 

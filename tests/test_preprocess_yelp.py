@@ -49,6 +49,16 @@ class PreprocessYelpTests(unittest.TestCase):
                     "state": "PA",
                     "categories": "Museums, Arts & Entertainment",
                 },
+                {
+                    "business_id": "water-ice",
+                    "name": "Local Water Ice",
+                    "city": "Philadelphia",
+                    "state": "PA",
+                    "categories": "Shaved Ice, Desserts, Food",
+                    "latitude": 39.96,
+                    "longitude": -75.17,
+                    "is_open": 1,
+                },
             ],
         )
         output = self.root / "restaurants.csv"
@@ -57,11 +67,11 @@ class PreprocessYelpTests(unittest.TestCase):
             source, output, "Philadelphia", "PA", False
         )
 
-        self.assertEqual(business_ids, {"keep"})
-        self.assertEqual(stats["restaurants_selected"], 1)
+        self.assertEqual(business_ids, {"keep", "water-ice"})
+        self.assertEqual(stats["restaurants_selected"], 2)
         with output.open(encoding="utf-8", newline="") as result:
             rows = list(csv.DictReader(result))
-        self.assertEqual(rows[0]["name"], "Good Food")
+        self.assertEqual({row["name"] for row in rows}, {"Good Food", "Local Water Ice"})
 
     def test_filters_reviews_by_selected_business_id(self) -> None:
         source = self.write_jsonl(

@@ -113,8 +113,8 @@ the Philadelphia datasets with the streaming preprocessing script:
 
 ```bash
 python3 scripts/preprocess_yelp.py \
-  --businesses yelp_academic_dataset_business.json \
-  --reviews yelp_academic_dataset_review-001.json
+  --businesses data/raw/yelp_academic_dataset_business.json \
+  --reviews data/raw/yelp_academic_dataset_review-001.json
 ```
 
 Generated files are written under `data/processed/`:
@@ -124,8 +124,10 @@ Generated files are written under `data/processed/`:
 - `preprocessing_summary.json`: record counts, malformed rows, and output sizes
 
 The script reads each source file one line at a time, so it can process the full
-review dataset without loading several gigabytes into memory. Use `--open-only`
-to exclude businesses Yelp marks as closed.
+review dataset without loading several gigabytes into memory. It retains Yelp
+restaurants plus relevant bakeries, dessert shops, pretzel shops, water-ice
+shops, delis, and food stands. Use `--open-only` to exclude businesses Yelp
+marks as closed.
 
 Run the preprocessing tests with:
 

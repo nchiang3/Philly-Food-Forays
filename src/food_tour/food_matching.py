@@ -43,6 +43,7 @@ FOOD_ALIASES: dict[str, tuple[str, ...]] = {
         "water ice",
         "wooder ice",
         "italian ice",
+        "gelati",
     ),
 }
 
@@ -120,6 +121,7 @@ FUZZY_SINGLE_BY_INITIAL: dict[str, tuple[tuple[str, str], ...]] = {
     "h": (("hoagie", "Hoagie"),),
     "p": (("pretzel", "Philadelphia Soft Pretzel"),),
     "s": (("scrapple", "Scrapple"),),
+    "g": (("gelati", "Water Ice"),),
 }
 
 FUZZY_PHRASE_BY_INITIAL: dict[str, tuple[tuple[tuple[str, ...], str], ...]] = {

@@ -85,7 +85,7 @@ metric_c.metric("Uploaded size", f"{restaurant_upload.size / 1_000_000:.1f} MB")
 st.subheader("Explore signature foods")
 selected_food = st.selectbox("Which Philadelphia food?", list(FOOD_ALIASES))
 open_only = st.toggle("Show only businesses marked open", value=True)
-minimum_mentions = st.slider("Minimum matching food reviews", 5, 100, 20)
+minimum_mentions = st.slider("Minimum matching food reviews", 1, 100, 5)
 
 filtered = rank_restaurants(
     restaurants,

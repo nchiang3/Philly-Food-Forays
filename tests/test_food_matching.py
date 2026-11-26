@@ -16,6 +16,7 @@ class FoodMatchingTests(unittest.TestCase):
             "Loved the tomato pie": "Tomato Pie",
             "Breakfast scrapple was crispy": "Scrapple",
             "Refreshing Italian ice": "Water Ice",
+            "The mango gelati was refreshing": "Water Ice",
         }
         for text, expected in examples.items():
             with self.subTest(text=text):
