@@ -106,9 +106,36 @@ Our primary objective is to demonstrate how **sentiment classification and K-mea
 
 Optimized walking routes, live restaurant data, and price prediction are potential future enhancements, but are not part of the initial project scope.
 
+## Data preprocessing
+
+Keep the original Yelp JSON files local; they are excluded from Git. Generate
+the Philadelphia datasets with the streaming preprocessing script:
+
+```bash
+python3 scripts/preprocess_yelp.py \
+  --businesses yelp_academic_dataset_business.json \
+  --reviews yelp_academic_dataset_review-001.json
+```
+
+Generated files are written under `data/processed/`:
+
+- `philadelphia_restaurants.csv`: restaurant attributes for analysis and the app
+- `philadelphia_reviews.jsonl`: reviews associated with selected restaurants
+- `preprocessing_summary.json`: record counts, malformed rows, and output sizes
+
+The script reads each source file one line at a time, so it can process the full
+review dataset without loading several gigabytes into memory. Use `--open-only`
+to exclude businesses Yelp marks as closed.
+
+Run the preprocessing tests with:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
 ## Project Status
 
-Planning and initial dataset exploration.
+Data preprocessing pipeline implemented; sentiment modeling is next.
 
 ## Team
 

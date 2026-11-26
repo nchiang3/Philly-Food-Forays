@@ -22,3 +22,6 @@ yelp_academic_dataset_*.json
 # Future raw-data location
 data/raw/
 
+# Generated datasets (rebuild with scripts/preprocess_yelp.py)
+data/processed/*
+!data/processed/.gitkeep
