@@ -16,6 +16,7 @@ from food_tour.data_access import (  # noqa: E402
     summarize_reviews,
 )
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
+from food_tour.ranking import rank_restaurants  # noqa: E402
 
 
 st.set_page_config(
@@ -84,34 +85,14 @@ metric_c.metric("Uploaded size", f"{restaurant_upload.size / 1_000_000:.1f} MB")
 st.subheader("Explore signature foods")
 selected_food = st.selectbox("Which Philadelphia food?", list(FOOD_ALIASES))
 open_only = st.toggle("Show only businesses marked open", value=True)
-minimum_mentions = st.slider("Minimum matching reviews", 1, 25, 3)
+minimum_mentions = st.slider("Minimum matching food reviews", 5, 100, 20)
 
-restaurant_by_id = {row["business_id"]: row for row in restaurants}
-filtered = []
-for sentiment in food_sentiment:
-    if sentiment["food"] != selected_food:
-        continue
-    if int(sentiment["matched_reviews"]) < minimum_mentions:
-        continue
-    restaurant = restaurant_by_id.get(sentiment["business_id"])
-    if restaurant is None or (open_only and restaurant.get("is_open") != "1"):
-        continue
-    filtered.append(
-        {
-            "name": restaurant["name"],
-            "address": restaurant["address"],
-            "Yelp stars": float(restaurant["stars"]),
-            "matching reviews": int(sentiment["matched_reviews"]),
-            "positive sentiment": float(sentiment["positive_share"]),
-            "food review stars": float(sentiment["average_review_stars"]),
-            "latitude": float(restaurant["latitude"]),
-            "longitude": float(restaurant["longitude"]),
-        }
-    )
-
-filtered.sort(
-    key=lambda row: (row["positive sentiment"], row["matching reviews"]),
-    reverse=True,
+filtered = rank_restaurants(
+    restaurants,
+    food_sentiment,
+    selected_food,
+    minimum_mentions,
+    open_only,
 )
 
 st.caption(f"Showing {len(filtered):,} matching restaurants")
@@ -120,9 +101,14 @@ st.dataframe(
     width="stretch",
     hide_index=True,
     column_config={
-        "positive sentiment": st.column_config.NumberColumn(format="percent"),
+        "food positive sentiment": st.column_config.NumberColumn(format="percent"),
+        "volume-adjusted sentiment": st.column_config.NumberColumn(format="percent"),
         "food review stars": st.column_config.NumberColumn(format="%.2f"),
     },
+)
+st.caption(
+    "Recommendation score: 45% volume-adjusted food sentiment, 40% "
+    "food-specific review volume, and 15% overall Yelp review volume."
 )
 
 st.subheader("Review data")

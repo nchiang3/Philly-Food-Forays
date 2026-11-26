@@ -15,7 +15,7 @@ import joblib
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.preprocess_yelp import iter_jsonl
-from src.food_tour.food_matching import match_foods
+from src.food_tour.food_matching import extract_food_snippets
 
 
 OUTPUT_FIELDS = (
@@ -32,20 +32,19 @@ OUTPUT_FIELDS = (
 
 def update_aggregates(
     model: Any,
-    batch: list[tuple[str, list[str], float, str]],
+    batch: list[tuple[str, str, float, str]],
     aggregates: dict[tuple[str, str], dict[str, float]],
 ) -> int:
     if not batch:
         return 0
     predictions = model.predict([item[3] for item in batch])
     associations = 0
-    for (business_id, foods, stars, _), sentiment in zip(batch, predictions):
-        for food in foods:
-            values = aggregates[(business_id, food)]
-            values["matched_reviews"] += 1
-            values[f"{sentiment}_reviews"] += 1
-            values["star_total"] += stars
-            associations += 1
+    for (business_id, food, stars, _), sentiment in zip(batch, predictions):
+        values = aggregates[(business_id, food)]
+        values["matched_reviews"] += 1
+        values[f"{sentiment}_reviews"] += 1
+        values["star_total"] += stars
+        associations += 1
     return associations
 
 
@@ -55,7 +54,7 @@ def build_summary(
     aggregates: dict[tuple[str, str], dict[str, float]] = defaultdict(
         lambda: defaultdict(float)
     )
-    batch: list[tuple[str, list[str], float, str]] = []
+    batch: list[tuple[str, str, float, str]] = []
     stats = {"reviews_read": 0, "reviews_matching_food": 0, "food_associations": 0}
 
     for _, review in iter_jsonl(review_path):
@@ -63,15 +62,19 @@ def build_summary(
         if review is None:
             continue
         text = str(review.get("text", ""))
-        foods = match_foods(text)
-        if not foods:
+        snippets = extract_food_snippets(text)
+        if not snippets:
             continue
         try:
-            row = (str(review["business_id"]), foods, float(review["stars"]), text)
+            business_id = str(review["business_id"])
+            stars = float(review["stars"])
         except (KeyError, TypeError, ValueError):
             continue
         stats["reviews_matching_food"] += 1
-        batch.append(row)
+        batch.extend(
+            (business_id, food, stars, snippet)
+            for food, snippet in snippets.items()
+        )
         if len(batch) >= batch_size:
             stats["food_associations"] += update_aggregates(model, batch, aggregates)
             batch.clear()

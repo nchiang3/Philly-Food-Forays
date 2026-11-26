@@ -97,6 +97,19 @@ def match_foods(text: str) -> list[str]:
     return [food for food in FOOD_ALIASES if food in matches]
 
 
+def extract_food_snippets(text: str) -> dict[str, str]:
+    """Return only the review sentences that mention each supported food."""
+    snippets: dict[str, list[str]] = {}
+    sentences = re.split(r"(?<=[.!?])\s+|[\r\n]+", text)
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        for food in match_foods(sentence):
+            snippets.setdefault(food, []).append(sentence)
+    return {food: " ".join(parts) for food, parts in snippets.items()}
+
+
 NORMALIZED_ALIASES: dict[str, tuple[tuple[str, ...], ...]] = {
     food: tuple(tuple(normalize_text(alias).split()) for alias in aliases)
     for food, aliases in FOOD_ALIASES.items()

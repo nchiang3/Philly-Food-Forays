@@ -165,8 +165,9 @@ python3 scripts/build_food_sentiment.py \
 
 The second command identifies reviews mentioning one of seven supported foods
 and creates `data/processed/food_sentiment.csv`, summarized by restaurant and
-food. Matching is case-insensitive, recognizes curated aliases, and tolerates
-modest misspellings for:
+food. Sentiment is predicted from the sentence mentioning the food rather than
+unrelated parts of the review. Matching is case-insensitive, recognizes curated
+aliases, and tolerates modest misspellings for:
 
 - Philly Cheesesteak
 - Roast Pork Sandwich
@@ -178,6 +179,12 @@ modest misspellings for:
 
 The locally trained model, evaluation report, and Yelp-derived summary remain
 excluded from Git. The scripts and matching rules are version-controlled.
+
+Restaurant recommendations use an explainable weighted score: 45% Bayesian
+food-specific sentiment, 40% food-specific review volume, and 15% overall Yelp
+review volume. Logarithmic volume scaling prevents the largest restaurant from
+automatically winning while ensuring that a tiny perfect sample cannot dominate
+hundreds of consistently positive reviews.
 
 ## Project Status
 

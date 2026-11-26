@@ -1,6 +1,6 @@
 import unittest
 
-from src.food_tour.food_matching import match_foods, normalize_text
+from src.food_tour.food_matching import extract_food_snippets, match_foods, normalize_text
 
 
 class FoodMatchingTests(unittest.TestCase):
@@ -29,7 +29,15 @@ class FoodMatchingTests(unittest.TestCase):
     def test_does_not_match_unrelated_food(self) -> None:
         self.assertEqual(match_foods("The pizza and salad were delicious"), [])
 
+    def test_extracts_only_food_specific_sentence(self) -> None:
+        snippets = extract_food_snippets(
+            "The service was wonderful. The cheesesteak was dry and disappointing."
+        )
+        self.assertEqual(
+            snippets["Philly Cheesesteak"],
+            "The cheesesteak was dry and disappointing.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
-
