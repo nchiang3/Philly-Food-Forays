@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import math
+from datetime import time
 from typing import Any
+
+from .hours import format_day_hours, format_weekly_hours, is_open_at
 
 
 SENTIMENT_WEIGHT = 0.45
@@ -18,6 +21,8 @@ def rank_restaurants(
     selected_food: str,
     minimum_mentions: int,
     open_only: bool,
+    visit_day: str | None = None,
+    visit_time: time | None = None,
 ) -> list[dict[str, Any]]:
     """Rank restaurants using Bayesian sentiment and logarithmic review volume."""
     restaurant_by_id = {row["business_id"]: row for row in restaurants}
@@ -30,6 +35,15 @@ def rank_restaurants(
         and (
             not open_only
             or restaurant_by_id[row["business_id"]].get("is_open") == "1"
+        )
+        and (
+            visit_day is None
+            or visit_time is None
+            or is_open_at(
+                restaurant_by_id[row["business_id"]].get("hours_json"),
+                visit_day,
+                visit_time,
+            )
         )
     ]
     if not candidates:
@@ -62,22 +76,25 @@ def rank_restaurants(
             + OVERALL_REVIEW_VOLUME_WEIGHT * overall_volume
         )
 
-        ranked.append(
-            {
-                "name": restaurant["name"],
-                "address": restaurant["address"],
-                "recommendation score": round(score, 1),
-                "Yelp stars": float(restaurant["stars"]),
-                "overall Yelp reviews": overall_reviews,
-                "matching food reviews": mentions,
-                "food positive sentiment": round(float(sentiment["positive_share"]), 4),
-                "volume-adjusted sentiment": round(adjusted_sentiment, 4),
-                "food review stars": float(sentiment["average_review_stars"]),
-                "latitude": float(restaurant["latitude"]),
-                "longitude": float(restaurant["longitude"]),
-            }
-        )
+        result = {
+            "name": restaurant["name"],
+            "address": restaurant["address"],
+            "opening hours": format_weekly_hours(restaurant.get("hours_json")),
+            "recommendation score": round(score, 1),
+            "Yelp stars": float(restaurant["stars"]),
+            "overall Yelp reviews": overall_reviews,
+            "matching food reviews": mentions,
+            "food positive sentiment": round(float(sentiment["positive_share"]), 4),
+            "volume-adjusted sentiment": round(adjusted_sentiment, 4),
+            "food review stars": float(sentiment["average_review_stars"]),
+            "latitude": float(restaurant["latitude"]),
+            "longitude": float(restaurant["longitude"]),
+        }
+        if visit_day is not None:
+            result[f"{visit_day} hours"] = format_day_hours(
+                restaurant.get("hours_json"), visit_day
+            )
+        ranked.append(result)
 
     ranked.sort(key=lambda row: row["recommendation score"], reverse=True)
     return ranked
-

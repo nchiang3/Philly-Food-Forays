@@ -86,16 +86,21 @@ The app currently provides:
 - Temporary upload of locally generated datasets
 - Selection from the seven supported foods
 - Open-business filtering
+- Readable weekly opening hours from the Yelp business dataset
+- Optional planned weekday and time filtering, including overnight hours
 - Adjustable minimum number of food-specific reviews
 - Ranked restaurant results with transparent component metrics
 - Optional upload and validation of the full review JSONL
 
 Uploaded files are session inputs and are not committed to GitHub.
+Opening hours reflect the Yelp Open Dataset snapshot rather than live business
+hours, and businesses without recorded hours are omitted when visit filtering
+is enabled.
 
 ## Planned next features
 
 - Geographic clustering of suitable restaurants
 - Interactive map display
-- Date and business-hours filtering
+- Calendar-date filtering for holidays and special closures
 - User control over rating versus travel-distance preference
 - A compact food-tour recommendation view

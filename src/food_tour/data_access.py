@@ -20,6 +20,7 @@ RESTAURANT_REQUIRED_FIELDS = {
     "review_count",
     "is_open",
     "categories",
+    "hours_json",
 }
 
 REVIEW_REQUIRED_FIELDS = {"review_id", "business_id", "stars", "text", "date"}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import time
 from pathlib import Path
 
 import streamlit as st
@@ -16,6 +17,7 @@ from food_tour.data_access import (  # noqa: E402
     summarize_reviews,
 )
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
+from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import rank_restaurants  # noqa: E402
 
 
@@ -86,6 +88,13 @@ st.subheader("Explore signature foods")
 selected_food = st.selectbox("Which Philadelphia food?", list(FOOD_ALIASES))
 open_only = st.toggle("Show only businesses marked open", value=True)
 minimum_mentions = st.slider("Minimum matching food reviews", 1, 100, 5)
+filter_by_visit = st.toggle("Filter by planned visit day and time", value=False)
+visit_day = None
+visit_time = None
+if filter_by_visit:
+    visit_column_a, visit_column_b = st.columns(2)
+    visit_day = visit_column_a.selectbox("Day visiting", WEEKDAYS)
+    visit_time = visit_column_b.time_input("Time visiting", value=time(12, 0))
 
 filtered = rank_restaurants(
     restaurants,
@@ -93,9 +102,16 @@ filtered = rank_restaurants(
     selected_food,
     minimum_mentions,
     open_only,
+    visit_day,
+    visit_time,
 )
 
 st.caption(f"Showing {len(filtered):,} matching restaurants")
+if filter_by_visit:
+    st.caption(
+        "Visit filtering uses the hours stored in the Yelp Open Dataset. "
+        "Businesses with missing hours are excluded."
+    )
 st.dataframe(
     filtered[:500],
     width="stretch",
