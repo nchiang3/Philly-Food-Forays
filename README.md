@@ -133,6 +133,21 @@ Run the preprocessing tests with:
 python3 -m unittest discover -s tests -v
 ```
 
+## Run the application
+
+Install the application dependency and start Streamlit:
+
+```bash
+python3 -m pip install -r requirements.txt
+streamlit run app.py
+```
+
+The app asks each user to upload their locally generated restaurant CSV and,
+when review-based functionality is needed, the review JSONL. Uploaded files
+remain temporary session inputs; they are not stored in Git or bundled with the
+application. The project-level Streamlit configuration allows the approximately
+535 MB review file to pass the default 200 MB upload ceiling.
+
 ## Project Status
 
 Data preprocessing pipeline implemented; sentiment modeling is next.
