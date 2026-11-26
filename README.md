@@ -1,5 +1,6 @@
-# Philly-Food-Forays
-# Food Tour Optimizer
+# Philly Food Forays
+
+Philadelphia Food Tour Optimizer
 
 ## Project Overview
 
@@ -8,6 +9,28 @@ The Food Tour Optimizer is a proposed Streamlit application designed to help tou
 When visiting a city known for a specific dish, tourists may struggle to identify the best restaurants and determine which areas of the city offer the most convenient options.
 
 Our goal is to use machine learning to identify restaurants with positive customer feedback and recommend geographic areas where tourists can explore multiple restaurants without traveling long distances.
+
+## Repository guide
+
+| Path | Purpose |
+|---|---|
+| `app.py` | Streamlit interface for uploading local data and exploring ranked food recommendations. |
+| `scripts/preprocess_yelp.py` | Streams the raw Yelp JSON files and creates Philadelphia-only business and review datasets. |
+| `scripts/train_sentiment.py` | Trains and evaluates the TF-IDF and logistic-regression sentiment model. |
+| `scripts/build_food_sentiment.py` | Finds signature-food mentions, predicts sentence-level sentiment, and creates restaurant-food summaries. |
+| `src/food_tour/data_access.py` | Validates uploaded restaurant, review, and food-sentiment files. |
+| `src/food_tour/food_matching.py` | Normalizes review text and matches the seven supported foods, aliases, and misspellings. |
+| `src/food_tour/ranking.py` | Scores restaurants using sentiment and food-specific and overall review volume. |
+| `tests/` | Automated tests for preprocessing, uploads, food matching, and ranking. |
+| `docs/PROJECT_FEATURES.md` | Detailed summary of application features, models, and current limitations. |
+| `docs/TEAM_GIT_WORKFLOW.md` | Team instructions for setup, branches, pull requests, merging, and local updates. |
+| `data/raw/` | Local Yelp source files; ignored by Git. |
+| `data/processed/` | Locally generated datasets; ignored by Git. |
+| `models/` | Locally trained model artifacts; ignored by Git. |
+| `reports/` | Local model-evaluation reports; ignored by Git. |
+
+For a concise technical overview, see [Project Features and ML Summary](docs/PROJECT_FEATURES.md).
+Contributors should follow the [Team Git Workflow](docs/TEAM_GIT_WORKFLOW.md).
 
 ## Dataset
 
@@ -190,7 +213,9 @@ hundreds of consistently positive reviews.
 
 ## Project Status
 
-Data preprocessing pipeline implemented; sentiment modeling is next.
+Data preprocessing, signature-food matching, sentiment modeling, volume-aware
+restaurant ranking, and the initial Streamlit interface are implemented.
+Geographic clustering and map visualization are the next planned phase.
 
 ## Team
 
