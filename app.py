@@ -21,6 +21,14 @@ from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import rank_restaurants  # noqa: E402
 
 
+VISIT_TIMES = [time(hour, minute) for hour in range(24) for minute in (0, 30)]
+
+
+def format_visit_time(value: time) -> str:
+    """Display an explicit, user-friendly 12-hour time."""
+    return value.strftime("%I:%M %p").lstrip("0")
+
+
 st.set_page_config(
     page_title="Philly Food Forays",
     page_icon="🥨",
@@ -94,7 +102,12 @@ visit_time = None
 if filter_by_visit:
     visit_column_a, visit_column_b = st.columns(2)
     visit_day = visit_column_a.selectbox("Day visiting", WEEKDAYS)
-    visit_time = visit_column_b.time_input("Time visiting", value=time(12, 0))
+    visit_time = visit_column_b.selectbox(
+        "Arrival time",
+        VISIT_TIMES,
+        index=VISIT_TIMES.index(time(12, 0)),
+        format_func=format_visit_time,
+    )
 
 filtered = rank_restaurants(
     restaurants,
