@@ -25,3 +25,9 @@ data/raw/
 # Generated datasets (rebuild with scripts/preprocess_yelp.py)
 data/processed/*
 !data/processed/.gitkeep
+
+# Locally trained Yelp-derived artifacts
+models/*
+!models/.gitkeep
+reports/*
+!reports/.gitkeep

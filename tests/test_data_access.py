@@ -4,7 +4,7 @@ import unittest
 
 from src.food_tour.data_access import (
     DatasetValidationError,
-    category_options,
+    load_food_sentiment,
     load_restaurants,
     summarize_reviews,
 )
@@ -54,11 +54,21 @@ class DataAccessTests(unittest.TestCase):
         self.assertEqual(summary["review_count"], 2)
         self.assertEqual(summary["business_count"], 1)
 
-    def test_category_options_excludes_generic_restaurants(self) -> None:
-        rows = [{"categories": "Restaurants, Pizza, Italian"}]
-        self.assertEqual(category_options(rows), ["Italian", "Pizza"])
+    def test_loads_food_sentiment_csv(self) -> None:
+        fields = [
+            "business_id",
+            "food",
+            "matched_reviews",
+            "positive_reviews",
+            "neutral_reviews",
+            "negative_reviews",
+            "positive_share",
+            "average_review_stars",
+        ]
+        content = ",".join(fields) + "\nb1,Hoagie,10,8,1,1,0.8,4.2\n"
+        rows = load_food_sentiment(io.BytesIO(content.encode()))
+        self.assertEqual(rows[0]["food"], "Hoagie")
 
 
 if __name__ == "__main__":
     unittest.main()
-

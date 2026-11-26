@@ -142,11 +142,42 @@ python3 -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app asks each user to upload their locally generated restaurant CSV and,
-when review-based functionality is needed, the review JSONL. Uploaded files
-remain temporary session inputs; they are not stored in Git or bundled with the
-application. The project-level Streamlit configuration allows the approximately
-535 MB review file to pass the default 200 MB upload ceiling.
+The app asks each user to upload their locally generated restaurant CSV and
+compact `food_sentiment.csv`. The review JSONL is optional and is only needed
+for training or validation. Uploaded files remain temporary session inputs;
+they are not stored in Git or bundled with the application. The project-level
+Streamlit configuration allows the approximately 535 MB review file to pass the
+default 200 MB upload ceiling when it is needed.
+
+## Sentiment and signature-food analysis
+
+The first model intentionally stays simple: TF-IDF text features and logistic
+regression. Yelp stars provide reproducible proxy labels: 1-2 stars are
+negative, 3 stars are neutral, and 4-5 stars are positive.
+
+```bash
+python3 scripts/train_sentiment.py \
+  --reviews data/processed/philadelphia_reviews.jsonl
+
+python3 scripts/build_food_sentiment.py \
+  --reviews data/processed/philadelphia_reviews.jsonl
+```
+
+The second command identifies reviews mentioning one of seven supported foods
+and creates `data/processed/food_sentiment.csv`, summarized by restaurant and
+food. Matching is case-insensitive, recognizes curated aliases, and tolerates
+modest misspellings for:
+
+- Philly Cheesesteak
+- Roast Pork Sandwich
+- Hoagie
+- Philadelphia Soft Pretzel
+- Tomato Pie
+- Scrapple
+- Water Ice
+
+The locally trained model, evaluation report, and Yelp-derived summary remain
+excluded from Git. The scripts and matching rules are version-controlled.
 
 ## Project Status
 

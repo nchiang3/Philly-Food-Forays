@@ -24,6 +24,17 @@ RESTAURANT_REQUIRED_FIELDS = {
 
 REVIEW_REQUIRED_FIELDS = {"review_id", "business_id", "stars", "text", "date"}
 
+FOOD_SENTIMENT_REQUIRED_FIELDS = {
+    "business_id",
+    "food",
+    "matched_reviews",
+    "positive_reviews",
+    "neutral_reviews",
+    "negative_reviews",
+    "positive_share",
+    "average_review_stars",
+}
+
 
 class DatasetValidationError(ValueError):
     """Raised when an uploaded dataset does not match the expected schema."""
@@ -52,6 +63,27 @@ def load_restaurants(binary_file: BinaryIO) -> list[dict[str, str]]:
 
     if not rows:
         raise DatasetValidationError("Restaurant CSV contains no data rows.")
+    return rows
+
+
+def load_food_sentiment(binary_file: BinaryIO) -> list[dict[str, str]]:
+    """Load and validate restaurant-by-food sentiment summaries."""
+    text_file = _text_reader(binary_file)
+    try:
+        reader = csv.DictReader(text_file)
+        fields = set(reader.fieldnames or [])
+        missing = FOOD_SENTIMENT_REQUIRED_FIELDS - fields
+        if missing:
+            raise DatasetValidationError(
+                "Food sentiment CSV is missing columns: " + ", ".join(sorted(missing))
+            )
+        rows = list(reader)
+    finally:
+        text_file.detach()
+        binary_file.seek(0)
+
+    if not rows:
+        raise DatasetValidationError("Food sentiment CSV contains no data rows.")
     return rows
 
 
@@ -106,14 +138,3 @@ def summarize_reviews(binary_file: BinaryIO) -> dict[str, Any]:
         "star_counts": dict(sorted(star_counts.items())),
         "sample": sample,
     }
-
-
-def category_options(restaurants: list[dict[str, str]]) -> list[str]:
-    """Return normalized Yelp categories for UI filtering."""
-    categories: set[str] = set()
-    for restaurant in restaurants:
-        value = restaurant.get("categories", "")
-        categories.update(part.strip() for part in value.split(",") if part.strip())
-    categories.discard("Restaurants")
-    return sorted(categories, key=str.casefold)
-

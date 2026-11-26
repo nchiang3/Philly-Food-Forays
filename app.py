@@ -11,10 +11,11 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from food_tour.data_access import (  # noqa: E402
     DatasetValidationError,
-    category_options,
+    load_food_sentiment,
     load_restaurants,
     summarize_reviews,
 )
+from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 
 
 st.set_page_config(
@@ -42,10 +43,16 @@ restaurant_upload = st.file_uploader(
     help="Expected file: philadelphia_restaurants.csv (approximately 6.35 MB).",
 )
 review_upload = st.file_uploader(
-    "Philadelphia review JSONL (optional for initial exploration)",
+    "Philadelphia review JSONL (optional; needed only for training/validation)",
     type=["jsonl"],
     max_upload_size=650,
     help="Expected file: philadelphia_reviews.jsonl (approximately 535 MB).",
+)
+sentiment_upload = st.file_uploader(
+    "Food sentiment summary CSV",
+    type=["csv"],
+    max_upload_size=25,
+    help="Expected file: food_sentiment.csv, created by build_food_sentiment.py.",
 )
 
 if restaurant_upload is None:
@@ -58,33 +65,64 @@ except (DatasetValidationError, UnicodeDecodeError) as error:
     st.error(str(error))
     st.stop()
 
+if sentiment_upload is None:
+    st.info("Upload food_sentiment.csv to generate food-specific recommendations.")
+    st.stop()
+
+try:
+    food_sentiment = load_food_sentiment(sentiment_upload)
+except (DatasetValidationError, UnicodeDecodeError) as error:
+    st.error(str(error))
+    st.stop()
+
 open_count = sum(row.get("is_open") == "1" for row in restaurants)
 metric_a, metric_b, metric_c = st.columns(3)
 metric_a.metric("Restaurants", f"{len(restaurants):,}")
 metric_b.metric("Marked open", f"{open_count:,}")
 metric_c.metric("Uploaded size", f"{restaurant_upload.size / 1_000_000:.1f} MB")
 
-st.subheader("Explore restaurants")
-categories = category_options(restaurants)
-selected_category = st.selectbox("Food or cuisine category", ["All"] + categories)
+st.subheader("Explore signature foods")
+selected_food = st.selectbox("Which Philadelphia food?", list(FOOD_ALIASES))
 open_only = st.toggle("Show only businesses marked open", value=True)
+minimum_mentions = st.slider("Minimum matching reviews", 1, 25, 3)
 
-filtered = restaurants
-if selected_category != "All":
-    filtered = [
-        row
-        for row in filtered
-        if selected_category in {part.strip() for part in row["categories"].split(",")}
-    ]
-if open_only:
-    filtered = [row for row in filtered if row.get("is_open") == "1"]
+restaurant_by_id = {row["business_id"]: row for row in restaurants}
+filtered = []
+for sentiment in food_sentiment:
+    if sentiment["food"] != selected_food:
+        continue
+    if int(sentiment["matched_reviews"]) < minimum_mentions:
+        continue
+    restaurant = restaurant_by_id.get(sentiment["business_id"])
+    if restaurant is None or (open_only and restaurant.get("is_open") != "1"):
+        continue
+    filtered.append(
+        {
+            "name": restaurant["name"],
+            "address": restaurant["address"],
+            "Yelp stars": float(restaurant["stars"]),
+            "matching reviews": int(sentiment["matched_reviews"]),
+            "positive sentiment": float(sentiment["positive_share"]),
+            "food review stars": float(sentiment["average_review_stars"]),
+            "latitude": float(restaurant["latitude"]),
+            "longitude": float(restaurant["longitude"]),
+        }
+    )
+
+filtered.sort(
+    key=lambda row: (row["positive sentiment"], row["matching reviews"]),
+    reverse=True,
+)
 
 st.caption(f"Showing {len(filtered):,} matching restaurants")
-preview_fields = ["name", "address", "stars", "review_count", "categories"]
 st.dataframe(
-    [{field: row.get(field) for field in preview_fields} for row in filtered[:500]],
+    filtered[:500],
     width="stretch",
     hide_index=True,
+    column_config={
+        "positive sentiment": st.column_config.NumberColumn(format="percent"),
+        "food review stars": st.column_config.NumberColumn(format="%.2f"),
+    },
 )
 
 st.subheader("Review data")
@@ -111,4 +149,3 @@ else:
         review_c.metric("Uploaded size", f"{review_upload.size / 1_000_000:.1f} MB")
         st.write("Review star distribution", summary["star_counts"])
         st.dataframe(summary["sample"], width="stretch", hide_index=True)
-
