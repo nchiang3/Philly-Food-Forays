@@ -21,6 +21,14 @@ from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import rank_restaurants  # noqa: E402
 
 
+VISIT_TIMES = [time(hour, minute) for hour in range(24) for minute in (0, 30)]
+
+
+def format_visit_time(value: time) -> str:
+    """Display an explicit, user-friendly 12-hour time."""
+    return value.strftime("%I:%M %p").lstrip("0")
+
+
 st.set_page_config(
     page_title="Philly Food Forays",
     page_icon="🥨",
@@ -90,11 +98,30 @@ open_only = st.toggle("Show only businesses marked open", value=True)
 minimum_mentions = st.slider("Minimum matching food reviews", 1, 100, 5)
 filter_by_visit = st.toggle("Filter by planned visit day and time", value=False)
 visit_day = None
-visit_time = None
+visit_start_time = None
+visit_end_time = None
 if filter_by_visit:
-    visit_column_a, visit_column_b = st.columns(2)
+    visit_column_a, visit_column_b, visit_column_c = st.columns(3)
     visit_day = visit_column_a.selectbox("Day visiting", WEEKDAYS)
-    visit_time = visit_column_b.time_input("Time visiting", value=time(12, 0))
+    visit_start_time = visit_column_b.selectbox(
+        "Start Time",
+        VISIT_TIMES[:-1],
+        index=VISIT_TIMES.index(time(12, 0)),
+        format_func=format_visit_time,
+    )
+    end_time_options = [value for value in VISIT_TIMES if value > visit_start_time]
+    default_end_time = time(17, 0)
+    end_time_index = (
+        end_time_options.index(default_end_time)
+        if default_end_time in end_time_options
+        else len(end_time_options) - 1
+    )
+    visit_end_time = visit_column_c.selectbox(
+        "End Time",
+        end_time_options,
+        index=end_time_index,
+        format_func=format_visit_time,
+    )
 
 filtered = rank_restaurants(
     restaurants,
@@ -103,14 +130,16 @@ filtered = rank_restaurants(
     minimum_mentions,
     open_only,
     visit_day,
-    visit_time,
+    visit_start_time,
+    visit_end_time,
 )
 
 st.caption(f"Showing {len(filtered):,} matching restaurants")
 if filter_by_visit:
     st.caption(
-        "Visit filtering uses the hours stored in the Yelp Open Dataset. "
-        "Businesses with missing hours are excluded."
+        "Restaurants qualify if they are open at any point in the selected "
+        "window. Hours come from the Yelp Open Dataset; businesses with "
+        "missing hours are excluded."
     )
 st.dataframe(
     filtered[:500],

@@ -87,7 +87,8 @@ The app currently provides:
 - Selection from the seven supported foods
 - Open-business filtering
 - Readable weekly opening hours from the Yelp business dataset
-- Optional planned weekday and time filtering, including overnight hours
+- Optional visit-window filtering that includes restaurants open at any point
+  between the selected start and end times
 - Adjustable minimum number of food-specific reviews
 - Ranked restaurant results with transparent component metrics
 - Optional upload and validation of the full review JSONL
@@ -102,5 +103,7 @@ is enabled.
 - Geographic clustering of suitable restaurants
 - Interactive map display
 - Calendar-date filtering for holidays and special closures
+- Visit-order optimization that prioritizes restaurants open at the start while
+  scheduling later-opening options within the selected time window
 - User control over rating versus travel-distance preference
 - A compact food-tour recommendation view

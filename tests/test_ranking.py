@@ -66,7 +66,7 @@ class RankingTests(unittest.TestCase):
                 "review_count": "100",
                 "latitude": "1",
                 "longitude": "2",
-                "hours_json": '{"Monday": "9:0-17:0"}',
+                "hours_json": '{"Monday": "14:0-17:0"}',
             },
             {
                 "business_id": "dinner",
@@ -100,10 +100,11 @@ class RankingTests(unittest.TestCase):
             True,
             "Monday",
             time(12, 0),
+            time(16, 0),
         )
 
         self.assertEqual([row["name"] for row in ranked], ["Lunch Shop"])
-        self.assertEqual(ranked[0]["Monday hours"], "9:00 AM–5:00 PM")
+        self.assertEqual(ranked[0]["Monday hours"], "2:00 PM–5:00 PM")
 
 
 if __name__ == "__main__":

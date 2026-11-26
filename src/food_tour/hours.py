@@ -109,3 +109,39 @@ def is_open_at(hours_json: str | None, weekday: str, visit_time: time) -> bool:
         if start > end and target < end:
             return True
     return False
+
+
+def is_open_during(
+    hours_json: str | None,
+    weekday: str,
+    start_time: time,
+    end_time: time,
+) -> bool:
+    """Return whether the business is open at any point in a same-day window."""
+    if weekday not in WEEKDAYS:
+        raise ValueError(f"Unknown weekday: {weekday}")
+
+    window_start = start_time.hour * 60 + start_time.minute
+    window_end = end_time.hour * 60 + end_time.minute
+    if window_end <= window_start:
+        raise ValueError("End time must be later than start time.")
+
+    hours = _load_hours(hours_json)
+    open_intervals: list[tuple[int, int]] = []
+    for start, end in _intervals(hours.get(weekday)):
+        if start == end:
+            open_intervals.append((0, 24 * 60))
+        elif start < end:
+            open_intervals.append((start, end))
+        else:
+            open_intervals.append((start, 24 * 60))
+
+    previous_day = WEEKDAYS[(WEEKDAYS.index(weekday) - 1) % len(WEEKDAYS)]
+    for start, end in _intervals(hours.get(previous_day)):
+        if start > end:
+            open_intervals.append((0, end))
+
+    return any(
+        open_start < window_end and open_end > window_start
+        for open_start, open_end in open_intervals
+    )

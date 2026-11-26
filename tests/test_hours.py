@@ -5,6 +5,7 @@ from src.food_tour.hours import (
     format_day_hours,
     format_weekly_hours,
     is_open_at,
+    is_open_during,
 )
 
 
@@ -25,6 +26,25 @@ class HoursTests(unittest.TestCase):
 
     def test_missing_hours_are_not_treated_as_open(self) -> None:
         self.assertFalse(is_open_at("{}", "Monday", time(12, 0)))
+
+    def test_checks_for_any_overlap_with_visit_window(self) -> None:
+        afternoon = '{"Monday": "14:0-18:0"}'
+        dinner = '{"Monday": "18:0-22:0"}'
+        self.assertTrue(
+            is_open_during(afternoon, "Monday", time(12, 0), time(17, 0))
+        )
+        self.assertFalse(
+            is_open_during(dinner, "Monday", time(12, 0), time(17, 0))
+        )
+
+    def test_rejects_reversed_visit_window(self) -> None:
+        with self.assertRaises(ValueError):
+            is_open_during(
+                '{"Monday": "9:0-17:0"}',
+                "Monday",
+                time(17, 0),
+                time(12, 0),
+            )
 
 
 if __name__ == "__main__":
