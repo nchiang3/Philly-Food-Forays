@@ -23,8 +23,12 @@ class DataAccessTests(unittest.TestCase):
             "review_count",
             "is_open",
             "categories",
+            "hours_json",
         ]
-        content = ",".join(fields) + "\n1,Cafe,Philadelphia,PA,1,2,4.5,10,1,Restaurants\n"
+        content = (
+            ",".join(fields)
+            + '\n1,Cafe,Philadelphia,PA,1,2,4.5,10,1,Restaurants,""{}""\n'
+        )
         rows = load_restaurants(io.BytesIO(content.encode()))
         self.assertEqual(rows[0]["name"], "Cafe")
 

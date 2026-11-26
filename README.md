@@ -76,9 +76,10 @@ The Streamlit application will allow users to:
 
 1. Select a food category or type of cuisine.
 2. View restaurants matching their selection.
-3. Explore geographic clusters of restaurants.
-4. See recommended areas based on restaurant ratings and customer sentiment.
-5. View restaurant locations on an interactive map.
+3. Filter restaurants by a planned visit day and time using stored Yelp hours.
+4. Explore geographic clusters of restaurants.
+5. See recommended areas based on restaurant ratings and customer sentiment.
+6. View restaurant locations on an interactive map.
 
 ## Technology Stack
 
