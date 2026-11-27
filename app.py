@@ -39,6 +39,7 @@ from food_tour.route import (  # noqa: E402
     CUMULATIVE_COLUMN,
     GOOGLE_MAPS_MAX_POINTS,
     LEG_COLUMN,
+    WALK_MINUTES_COLUMN,
     WALK_ORDER_COLUMN,
     add_route_legs,
     google_maps_walking_urls,
@@ -46,8 +47,9 @@ from food_tour.route import (  # noqa: E402
     map_view,
     order_walking_route,
     route_path,
-    total_route_miles,
+    route_points,
 )
+from food_tour.walking import WalkingRoute, fetch_walking_route  # noqa: E402
 from food_tour.schedule import (  # noqa: E402
     ARRIVAL_COLUMN,
     DEFAULT_MINUTES_PER_STOP,
@@ -334,21 +336,50 @@ ROUTE_COLOR = [200, 60, 30]
 START_COLOR = [40, 90, 160]
 
 
+class RoutingUnavailable(Exception):
+    """Raised so a failed routing request is not cached."""
+
+
+@st.cache_data(ttl=24 * 60 * 60, show_spinner="Finding walking routes...")
+def _cached_walking_route(points: tuple[tuple[float, float], ...]) -> WalkingRoute:
+    walking = fetch_walking_route(list(points))
+    if walking is None:
+        raise RoutingUnavailable
+    return walking
+
+
+def get_walking_route(
+    points: list[tuple[float, float]],
+) -> WalkingRoute | None:
+    """Street walking route for ``points``, cached for a day; None on failure."""
+    if len(points) < 2:
+        return None
+    rounded = tuple((round(lat, 6), round(lng, 6)) for lat, lng in points)
+    try:
+        return _cached_walking_route(rounded)
+    except RoutingUnavailable:
+        return None
+
+
 def show_tour_map(
     route_rows: list[dict],
     start: tuple[float, float] | None,
     start_label: str,
+    path: list[list[float]],
 ) -> None:
     """Draw the numbered route on a key-free map, with Google Maps links."""
     markers = [
         {**marker, "color": START_COLOR if marker["is_start"] else ROUTE_COLOR}
         for marker in map_markers(route_rows, start, start_label)
     ]
-    view = map_view([(row["latitude"], row["longitude"]) for row in markers])
+    view = map_view(
+        [(row["latitude"], row["longitude"]) for row in markers]
+        + [(latitude, longitude) for longitude, latitude in path]
+    )
     layers = [
         pdk.Layer(
             "PathLayer",
-            data=[{"path": route_path(route_rows, start)}],
+            data=[{"path": path}],
             get_path="path",
             get_color=ROUTE_COLOR,
             width_min_pixels=4,
@@ -446,7 +477,9 @@ if filtered:
         )
         scheduled = [row for row in plan if row[VISIT_ORDER_COLUMN] is not None]
         skipped = [row for row in plan if row[VISIT_ORDER_COLUMN] is None]
-        route_rows = add_route_legs(scheduled, route_start)
+        ordered_stops = scheduled
+        walking = get_walking_route(route_points(ordered_stops, route_start))
+        route_rows = add_route_legs(ordered_stops, route_start, walking)
         table_rows = route_rows + skipped
         table_columns = [
             VISIT_ORDER_COLUMN,
@@ -460,9 +493,9 @@ if filtered:
         ]
         order_column = VISIT_ORDER_COLUMN
     else:
-        route_rows = add_route_legs(
-            order_walking_route(tour_stops, route_start), route_start
-        )
+        ordered_stops = order_walking_route(tour_stops, route_start)
+        walking = get_walking_route(route_points(ordered_stops, route_start))
+        route_rows = add_route_legs(ordered_stops, route_start, walking)
         table_rows = route_rows
         table_columns = [
             WALK_ORDER_COLUMN,
@@ -473,6 +506,8 @@ if filtered:
             CUMULATIVE_COLUMN,
         ]
         order_column = WALK_ORDER_COLUMN
+    if walking is not None:
+        table_columns.insert(table_columns.index(CUMULATIVE_COLUMN), WALK_MINUTES_COLUMN)
     if any(DISTANCE_COLUMN in row for row in table_rows):
         table_columns.append(DISTANCE_COLUMN)
 
@@ -484,6 +519,7 @@ if filtered:
             order_column: st.column_config.NumberColumn(format="%d"),
             LEG_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
             CUMULATIVE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
+            WALK_MINUTES_COLUMN: st.column_config.NumberColumn(format="%d min"),
             DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
         },
     )
@@ -512,19 +548,39 @@ if filtered:
         st.caption(
             f"Stops are ordered to keep the walk short: the app {first_step}, "
             "walks to the nearest unvisited stop each time, then reverses any "
-            "stretch of the route that makes it shorter."
+            "stretch of the route that makes it shorter. The order is chosen "
+            "with straight-line distances"
+            + ("; the miles shown are along the streets." if walking else ".")
         )
 
     if route_rows:
-        total_miles = total_route_miles(route_rows, route_start)
-        st.metric("Total walk (straight line)", f"{total_miles:.2f} mi")
-        show_tour_map(route_rows, route_start, route_start_label)
-        st.caption(
-            "Lines and miles are straight-line distances between stops; "
-            "walking routes are usually 20-40% longer. The Google Maps link "
-            "opens turn-by-turn walking directions for the same stops in the "
-            "same order, with Google's real walking distance and time."
-        )
+        total_miles = route_rows[-1][CUMULATIVE_COLUMN]
+        if walking is not None:
+            metric_a, metric_b, _ = st.columns(3)
+            metric_a.metric("Total walk", f"{total_miles:.2f} mi")
+            metric_b.metric("Walking time", f"{walking.total_minutes:.0f} min")
+            path = walking.path
+        else:
+            st.metric("Total walk (straight line)", f"{total_miles:.2f} mi")
+            path = route_path(route_rows, route_start)
+        show_tour_map(route_rows, route_start, route_start_label, path)
+        if walking is not None:
+            st.caption(
+                "The map line, miles, and minutes follow walkable streets and "
+                "paths from OpenStreetMap, routed by the free FOSSGIS OSRM "
+                "service (routing.openstreetmap.de). Times assume a steady "
+                "walking pace and leave out time spent eating. The Google Maps "
+                "link opens the same stops in the same order, with Google's "
+                "own directions."
+            )
+        elif len(route_points(route_rows, route_start)) > 1:
+            st.info(
+                "Street walking routes are unavailable right now (the free "
+                "routing service didn't respond), so the map shows straight "
+                "lines between stops. Real walks are usually 20-40% longer. "
+                "The Google Maps link still gives turn-by-turn walking "
+                "directions."
+            )
 
 st.subheader("Review data")
 if review_upload is None:
