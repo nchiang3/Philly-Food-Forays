@@ -6,6 +6,7 @@ import sys
 from datetime import time
 from pathlib import Path
 
+import pydeck as pdk
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -34,6 +35,19 @@ from food_tour.chains import (  # noqa: E402
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import HOURS_JSON_COLUMN, rank_restaurants  # noqa: E402
+from food_tour.route import (  # noqa: E402
+    CUMULATIVE_COLUMN,
+    GOOGLE_MAPS_MAX_POINTS,
+    LEG_COLUMN,
+    WALK_ORDER_COLUMN,
+    add_route_legs,
+    google_maps_walking_urls,
+    map_markers,
+    map_view,
+    order_walking_route,
+    route_path,
+    total_route_miles,
+)
 from food_tour.schedule import (  # noqa: E402
     ARRIVAL_COLUMN,
     DEFAULT_MINUTES_PER_STOP,
@@ -312,68 +326,205 @@ st.caption(
     "food-specific review volume, and 15% overall Yelp review volume."
 )
 
-if filter_by_visit and filtered:
-    st.subheader("Suggested visit order")
-    order_column_a, order_column_b = st.columns(2)
-    minutes_per_stop = order_column_a.slider(
-        "Minutes per stop (eating plus walking)",
-        15,
-        120,
-        DEFAULT_MINUTES_PER_STOP,
-        step=5,
+# Free CARTO basemap built on OpenStreetMap data; no API key needed.
+CARTO_VOYAGER_STYLE = (
+    "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+)
+ROUTE_COLOR = [200, 60, 30]
+START_COLOR = [40, 90, 160]
+
+
+def show_tour_map(
+    route_rows: list[dict],
+    start: tuple[float, float] | None,
+    start_label: str,
+) -> None:
+    """Draw the numbered route on a key-free map, with Google Maps links."""
+    markers = [
+        {**marker, "color": START_COLOR if marker["is_start"] else ROUTE_COLOR}
+        for marker in map_markers(route_rows, start, start_label)
+    ]
+    view = map_view([(row["latitude"], row["longitude"]) for row in markers])
+    layers = [
+        pdk.Layer(
+            "PathLayer",
+            data=[{"path": route_path(route_rows, start)}],
+            get_path="path",
+            get_color=ROUTE_COLOR,
+            width_min_pixels=4,
+        ),
+        pdk.Layer(
+            "ScatterplotLayer",
+            data=markers,
+            get_position=["longitude", "latitude"],
+            get_fill_color="color",
+            get_line_color=[255, 255, 255],
+            stroked=True,
+            line_width_min_pixels=2,
+            get_radius=25,
+            radius_min_pixels=13,
+            pickable=True,
+        ),
+        pdk.Layer(
+            "TextLayer",
+            data=markers,
+            get_position=["longitude", "latitude"],
+            get_text="label",
+            get_size=14,
+            get_color=[255, 255, 255],
+            get_text_anchor=pdk.types.String("middle"),
+            get_alignment_baseline=pdk.types.String("center"),
+        ),
+    ]
+    st.pydeck_chart(
+        pdk.Deck(
+            layers=layers,
+            initial_view_state=pdk.ViewState(**view),
+            map_provider="carto",
+            map_style=CARTO_VOYAGER_STYLE,
+            tooltip={"html": "<b>{title}</b><br/>{address}<br/>{leg}"},
+        )
     )
+
+    links = google_maps_walking_urls(route_rows, start)
+    if len(links) == 1:
+        st.link_button("Open walking route in Google Maps", links[0])
+    else:
+        link_columns = st.columns(len(links))
+        for part, (column, link) in enumerate(zip(link_columns, links), start=1):
+            column.link_button(
+                f"Open part {part} of {len(links)} in Google Maps", link
+            )
+        st.caption(
+            f"Google Maps links hold up to {GOOGLE_MAPS_MAX_POINTS} points, "
+            f"so the route is split into {len(links)} links. Each part starts "
+            f"where the previous one ended."
+        )
+
+
+if filtered:
+    st.subheader("Your tour")
+    tour_column_a, tour_column_b = st.columns(2)
     if filter_by_distance and distance_mode == CLOSE_TOGETHER:
         tour_stops = filtered
-        order_column_b.caption(
-            f"Scheduling the {len(tour_stops)} stops picked above."
-        )
+        tour_column_a.caption(f"Touring the {len(tour_stops)} stops picked above.")
     else:
         stop_limit = min(15, len(filtered))
-        stops_to_plan = (
-            order_column_b.slider(
-                "Stops to schedule", 1, stop_limit, min(5, stop_limit)
+        stops_in_tour = (
+            tour_column_a.slider(
+                "Stops in tour", 1, stop_limit, min(5, stop_limit)
             )
             if stop_limit > 1
             else 1
         )
-        tour_stops = filtered[:stops_to_plan]
-    plan = plan_visit_order(
-        tour_stops,
-        visit_day,
-        visit_start_time,
-        visit_end_time,
-        minutes_per_stop,
-    )
-    plan_columns = [
-        VISIT_ORDER_COLUMN,
-        ARRIVAL_COLUMN,
-        "name",
-        "address",
-        f"{visit_day} hours",
-        "recommendation score",
-    ]
-    if any(DISTANCE_COLUMN in row for row in plan):
-        plan_columns.append(DISTANCE_COLUMN)
+        tour_stops = filtered[:stops_in_tour]
+
+    route_start = None
+    route_start_label = ""
+    if (
+        filter_by_distance
+        and distance_mode == NEAR_START
+        and start_name != TOP_RANKED_START
+    ):
+        route_start = LANDMARKS[start_name]
+        route_start_label = start_name
+
+    if filter_by_visit:
+        minutes_per_stop = tour_column_b.slider(
+            "Minutes per stop (eating plus walking)",
+            15,
+            120,
+            DEFAULT_MINUTES_PER_STOP,
+            step=5,
+        )
+        plan = plan_visit_order(
+            tour_stops,
+            visit_day,
+            visit_start_time,
+            visit_end_time,
+            minutes_per_stop,
+        )
+        scheduled = [row for row in plan if row[VISIT_ORDER_COLUMN] is not None]
+        skipped = [row for row in plan if row[VISIT_ORDER_COLUMN] is None]
+        route_rows = add_route_legs(scheduled, route_start)
+        table_rows = route_rows + skipped
+        table_columns = [
+            VISIT_ORDER_COLUMN,
+            ARRIVAL_COLUMN,
+            "name",
+            "address",
+            f"{visit_day} hours",
+            "recommendation score",
+            LEG_COLUMN,
+            CUMULATIVE_COLUMN,
+        ]
+        order_column = VISIT_ORDER_COLUMN
+    else:
+        route_rows = add_route_legs(
+            order_walking_route(tour_stops, route_start), route_start
+        )
+        table_rows = route_rows
+        table_columns = [
+            WALK_ORDER_COLUMN,
+            "name",
+            "address",
+            "recommendation score",
+            LEG_COLUMN,
+            CUMULATIVE_COLUMN,
+        ]
+        order_column = WALK_ORDER_COLUMN
+    if any(DISTANCE_COLUMN in row for row in table_rows):
+        table_columns.append(DISTANCE_COLUMN)
+
     st.dataframe(
-        [{column: row.get(column) for column in plan_columns} for row in plan],
+        [{column: row.get(column) for column in table_columns} for row in table_rows],
         width="stretch",
         hide_index=True,
         column_config={
-            VISIT_ORDER_COLUMN: st.column_config.NumberColumn(format="%d"),
+            order_column: st.column_config.NumberColumn(format="%d"),
+            LEG_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
+            CUMULATIVE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
             DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
         },
     )
-    st.caption(
-        f"Starting at {format_visit_time(visit_start_time)}, each next stop is "
-        f"the one you can visit soonest: places open at the start come first, "
-        f"and later-opening places are scheduled after they open. Ties go to "
-        f"the place that closes sooner, then the higher-ranked one. Every stop "
-        f"is reached before it closes and before "
-        f"{format_visit_time(visit_end_time)}. Times are approximate."
+    start_note = (
+        f" The walk starts at {route_start_label}." if route_start else ""
     )
-    unscheduled = unscheduled_message(plan)
-    if unscheduled:
-        st.warning(unscheduled)
+    if filter_by_visit:
+        st.caption(
+            f"Starting at {format_visit_time(visit_start_time)}, each next "
+            f"stop is the one you can visit soonest: places open at the start "
+            f"come first, and later-opening places are scheduled after they "
+            f"open. Ties go to the place that closes sooner, then the "
+            f"higher-ranked one. Every stop is reached before it closes and "
+            f"before {format_visit_time(visit_end_time)}. Times are "
+            f"approximate.{start_note}"
+        )
+        unscheduled = unscheduled_message(plan)
+        if unscheduled:
+            st.warning(unscheduled)
+    else:
+        first_step = (
+            f"starts at {route_start_label}"
+            if route_start
+            else "tries each stop as the first one"
+        )
+        st.caption(
+            f"Stops are ordered to keep the walk short: the app {first_step}, "
+            "walks to the nearest unvisited stop each time, then reverses any "
+            "stretch of the route that makes it shorter."
+        )
+
+    if route_rows:
+        total_miles = total_route_miles(route_rows, route_start)
+        st.metric("Total walk (straight line)", f"{total_miles:.2f} mi")
+        show_tour_map(route_rows, route_start, route_start_label)
+        st.caption(
+            "Lines and miles are straight-line distances between stops; "
+            "walking routes are usually 20-40% longer. The Google Maps link "
+            "opens turn-by-turn walking directions for the same stops in the "
+            "same order, with Google's real walking distance and time."
+        )
 
 st.subheader("Review data")
 if review_upload is None:
