@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable, Hashable
 from typing import Any
 
 
@@ -69,10 +70,51 @@ def filter_near_start(
     return [row for row in nearby if row[DISTANCE_COLUMN] <= max_miles]
 
 
+def mean_miles(row: dict[str, Any], points: list[tuple[float, float]]) -> float:
+    """Return the average straight-line distance from ``row`` to ``points``."""
+    if not points:
+        return 0.0
+    here = _coordinates(row)
+    return sum(haversine_miles(*here, *point) for point in points) / len(points)
+
+
+def closest_to(
+    locations: list[dict[str, Any]], points: list[tuple[float, float]]
+) -> dict[str, Any]:
+    """Pick the location with the smallest average distance to ``points``.
+
+    Ties, and the case with no reference points, go to the earliest
+    (best-ranked) location.
+    """
+    return min(locations, key=lambda row: mean_miles(row, points))
+
+
+def leading_points(
+    ranked: list[dict[str, Any]],
+    group_key: Callable[[dict[str, Any]], Hashable],
+    exclude: Hashable,
+    count: int,
+) -> list[tuple[float, float]]:
+    """Coordinates of the best-ranked row of the top ``count`` other groups."""
+    seen: set[Hashable] = {exclude}
+    points: list[tuple[float, float]] = []
+    for row in ranked:
+        if len(points) >= count:
+            break
+        key = group_key(row)
+        if key in seen:
+            continue
+        seen.add(key)
+        points.append(_coordinates(row))
+    return points
+
+
 def select_close_together(
     ranked: list[dict[str, Any]],
     max_miles: float,
     max_stops: int | None = None,
+    group_key: Callable[[dict[str, Any]], Hashable] | None = None,
+    reference_count: int = 10,
 ) -> list[dict[str, Any]]:
     """Greedily pick top spots that are all within ``max_miles`` of each other.
 
@@ -80,17 +122,50 @@ def select_close_together(
     only if it is within ``max_miles`` of every stop already chosen, so the
     largest gap between any two stops never exceeds the limit. The top-ranked
     restaurant is always the first stop, and distances are reported from it.
+
+    When ``group_key`` is given (for example, a chain name), each group
+    contributes at most one stop, considered at the rank of its best location.
+    Among that group's locations that fit, the one with the smallest average
+    distance to the stops already chosen is used. For the first stop, the
+    reference is the best location of each of the next ``reference_count``
+    groups.
     """
+    groups: dict[Hashable, list[dict[str, Any]]] = {}
+    if group_key is not None:
+        for row in ranked:
+            groups.setdefault(group_key(row), []).append(row)
+
     chosen: list[dict[str, Any]] = []
+    used: set[Hashable] = set()
     for row in ranked:
         if max_stops is not None and len(chosen) >= max_stops:
             break
-        point = _coordinates(row)
-        if all(
-            haversine_miles(*point, *_coordinates(stop)) <= max_miles
-            for stop in chosen
-        ):
-            chosen.append(row)
+        if group_key is None:
+            candidates = [row]
+        else:
+            key = group_key(row)
+            if key in used:
+                continue
+            used.add(key)
+            candidates = groups[key]
+        fitting = [
+            candidate
+            for candidate in candidates
+            if all(
+                haversine_miles(*_coordinates(candidate), *_coordinates(stop))
+                <= max_miles
+                for stop in chosen
+            )
+        ]
+        if not fitting:
+            continue
+        if len(fitting) == 1:
+            chosen.append(fitting[0])
+            continue
+        points = [_coordinates(stop) for stop in chosen] or leading_points(
+            ranked, group_key, key, reference_count
+        )
+        chosen.append(closest_to(fitting, points))
     if not chosen:
         return []
     origin = _coordinates(chosen[0])
