@@ -131,72 +131,97 @@ metric_b.metric("Marked open", f"{open_count:,}")
 metric_c.metric("Uploaded size", f"{restaurant_upload.size / 1_000_000:.1f} MB")
 
 st.subheader("Explore signature foods")
-selected_food = st.selectbox("Which Philadelphia food?", list(FOOD_ALIASES))
-open_only = st.toggle("Show only businesses marked open", value=True)
-minimum_mentions = st.slider("Minimum matching food reviews", 1, 100, 5)
-filter_by_visit = st.toggle("Filter by planned visit day and time", value=False)
-visit_day = None
-visit_start_time = None
-visit_end_time = None
-if filter_by_visit:
-    visit_column_a, visit_column_b, visit_column_c = st.columns(3)
-    visit_day = visit_column_a.selectbox("Day visiting", WEEKDAYS)
-    visit_start_time = visit_column_b.selectbox(
-        "Start Time",
-        VISIT_TIMES[:-1],
-        index=VISIT_TIMES.index(time(12, 0)),
-        format_func=format_visit_time,
-    )
-    end_time_options = [value for value in VISIT_TIMES if value > visit_start_time]
-    default_end_time = time(17, 0)
-    end_time_index = (
-        end_time_options.index(default_end_time)
-        if default_end_time in end_time_options
-        else len(end_time_options) - 1
-    )
-    visit_end_time = visit_column_c.selectbox(
-        "End Time",
-        end_time_options,
-        index=end_time_index,
-        format_func=format_visit_time,
-    )
 
 CLOSE_TOGETHER = "Close to each other"
 NEAR_START = "Close to a starting point"
 
-one_per_chain = st.toggle(
-    "Show one location per chain",
-    value=True,
-    help=(
-        "Chains such as Wawa appear once, using the location closest to the "
-        "other top-ranked spots."
-    ),
-)
-filter_by_distance = st.toggle(
-    "Keep top spots within walking distance", value=False
-)
+visit_day = None
+visit_start_time = None
+visit_end_time = None
 distance_mode = None
 max_miles = None
-if filter_by_distance:
-    distance_column_a, distance_column_b, distance_column_c = st.columns(3)
-    distance_mode = distance_column_a.radio(
-        "Measure distance",
-        [CLOSE_TOGETHER, NEAR_START],
-        help=(
-            "Close to each other: every stop is within the limit of every "
-            "other stop. Close to a starting point: every stop is within the "
-            "limit of the chosen start."
-        ),
+
+with st.container(border=True):
+    st.markdown("**Tune your search**")
+    st.caption(
+        "Pick a food, then adjust the filters. Results below update as you go."
     )
-    max_miles = distance_column_b.slider(
-        "Maximum distance (miles)", 0.25, 5.0, 1.0, step=0.25
+
+    basics_food, basics_reviews, basics_toggles = st.columns([2, 2, 1.6])
+    selected_food = basics_food.selectbox(
+        "Which Philadelphia food?", list(FOOD_ALIASES)
     )
-    if distance_mode == CLOSE_TOGETHER:
-        max_stops = distance_column_c.slider("Number of stops", 2, 15, 5)
-    else:
-        start_name = distance_column_c.selectbox(
-            "Starting point", [TOP_RANKED_START, *LANDMARKS]
+    minimum_mentions = basics_reviews.slider(
+        "Minimum matching food reviews", 1, 100, 5
+    )
+    with basics_toggles:
+        open_only = st.toggle("Show only businesses marked open", value=True)
+        one_per_chain = st.toggle(
+            "Show one location per chain",
+            value=True,
+            help=(
+                "Chains such as Wawa appear once, using the location closest "
+                "to the other top-ranked spots."
+            ),
         )
+
+    st.divider()
+
+    visit_panel, distance_panel = st.columns(2, gap="large")
+    with visit_panel:
+        filter_by_visit = st.toggle(
+            "Filter by planned visit day and time", value=False
+        )
+        if filter_by_visit:
+            visit_day = st.selectbox("Day visiting", WEEKDAYS)
+            visit_column_a, visit_column_b = st.columns(2)
+            visit_start_time = visit_column_a.selectbox(
+                "Start Time",
+                VISIT_TIMES[:-1],
+                index=VISIT_TIMES.index(time(12, 0)),
+                format_func=format_visit_time,
+            )
+            end_time_options = [
+                value for value in VISIT_TIMES if value > visit_start_time
+            ]
+            default_end_time = time(17, 0)
+            end_time_index = (
+                end_time_options.index(default_end_time)
+                if default_end_time in end_time_options
+                else len(end_time_options) - 1
+            )
+            visit_end_time = visit_column_b.selectbox(
+                "End Time",
+                end_time_options,
+                index=end_time_index,
+                format_func=format_visit_time,
+            )
+
+    with distance_panel:
+        filter_by_distance = st.toggle(
+            "Keep top spots within walking distance", value=False
+        )
+        if filter_by_distance:
+            distance_mode = st.radio(
+                "Measure distance",
+                [CLOSE_TOGETHER, NEAR_START],
+                horizontal=True,
+                help=(
+                    "Close to each other: every stop is within the limit of "
+                    "every other stop. Close to a starting point: every stop "
+                    "is within the limit of the chosen start."
+                ),
+            )
+            distance_column_a, distance_column_b = st.columns(2)
+            max_miles = distance_column_a.slider(
+                "Maximum distance (miles)", 0.25, 5.0, 1.0, step=0.25
+            )
+            if distance_mode == CLOSE_TOGETHER:
+                max_stops = distance_column_b.slider("Number of stops", 2, 15, 5)
+            else:
+                start_name = distance_column_b.selectbox(
+                    "Starting point", [TOP_RANKED_START, *LANDMARKS]
+                )
 
 ranked = rank_restaurants(
     restaurants,

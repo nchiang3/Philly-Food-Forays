@@ -86,6 +86,14 @@ The app currently provides:
 - Temporary upload of locally generated datasets, with the three uploaders
   side by side in a collapsible "Upload files here" section that starts open
   and collapses once the restaurant and food sentiment CSVs are uploaded
+- A bordered "Tune your search" settings panel under "Explore signature
+  foods" that lays the search controls out horizontally instead of in one
+  long column. The top row holds the food picker, the minimum food reviews
+  slider, and the open-only and one-location-per-chain toggles. Below a
+  divider, the visit day and time filter and the walking distance filter sit
+  side by side, and each one's sub-controls (day, start and end time;
+  distance mode, maximum miles, number of stops or starting point) appear
+  inside its own half of the panel when its toggle is on
 - Selection from the seven supported foods
 - Open-business filtering
 - Readable weekly opening hours from the Yelp business dataset
