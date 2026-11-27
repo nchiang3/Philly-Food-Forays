@@ -21,6 +21,7 @@ Our goal is to use machine learning to identify restaurants with positive custom
 | `src/food_tour/data_access.py` | Validates uploaded restaurant, review, and food-sentiment files. |
 | `src/food_tour/food_matching.py` | Normalizes review text and matches the seven supported foods, aliases, and misspellings. |
 | `src/food_tour/ranking.py` | Scores restaurants using sentiment and food-specific and overall review volume. |
+| `src/food_tour/route.py` | Orders tour stops into a short walking route, measures each leg, and builds the map data and Google Maps links. |
 | `tests/` | Automated tests for preprocessing, uploads, food matching, and ranking. |
 | `docs/PROJECT_FEATURES.md` | Detailed summary of application features, models, and current limitations. |
 | `docs/TEAM_GIT_WORKFLOW.md` | Team instructions for setup, branches, pull requests, merging, and local updates. |
@@ -91,7 +92,7 @@ The Streamlit application will allow users to:
 | Data processing | pandas, NumPy |
 | Sentiment classification | scikit-learn / NLP |
 | Geographic clustering | K-means (scikit-learn) |
-| Mapping | Folium or similar |
+| Mapping | pydeck with a free CARTO/OpenStreetMap basemap, plus Google Maps walking-direction links |
 | Version control | GitHub |
 | Deployment | Streamlit Community Cloud |
 

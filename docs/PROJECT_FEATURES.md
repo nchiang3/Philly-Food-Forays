@@ -104,6 +104,9 @@ The app currently provides:
   top picks (see below)
 - Optional distance filtering that keeps recommended spots within walking
   distance (see below)
+- A "Your tour" section with a map of the stops numbered in walking order,
+  straight-line miles per leg and in total, and a link that opens the same
+  route as walking directions in Google Maps (see below)
 - A suggested visit order with approximate arrival times, based on each
   stop's opening hours within the visit window (see below)
 - Ranked restaurant results with transparent component metrics
@@ -182,11 +185,12 @@ in each mode, rank preservation, unnamed rows, and empty inputs.
 ## Visit order by opening hours
 
 `src/food_tour/schedule.py` turns the tour into a timed plan when the visit
-day and time filter is on. A "Suggested visit order" table appears below the
-ranked results with a `visit order`, an approximate `arrive around` time, the
-day's hours, and the score (plus `miles from start` when a distance filter is
-on). The stops scheduled are the tour picked by the "Close to each other"
-filter, or otherwise the top restaurants, with a "Stops to schedule" slider
+day and time filter is on. The "Your tour" table below the ranked results then
+shows a `visit order`, an approximate `arrive around` time, the day's hours,
+the score, and the leg miles described in the next section (plus
+`miles from start` when a distance filter is on).
+The stops scheduled are the tour picked by the "Close to each other"
+filter, or otherwise the top restaurants, with a "Stops in tour" slider
 (up to 15, default 5).
 
 The plan starts at the window's start time and repeatedly picks the stop that
@@ -213,10 +217,62 @@ Unit tests in `tests/test_schedule.py` cover open-at-start ordering, waiting
 for a later opening, the closing-time and rank tie-breaks, stops that close or
 fall past the window, overnight hours, and invalid inputs.
 
+## Tour map and walking route
+
+`src/food_tour/route.py` powers the "Your tour" section, which appears below
+the ranked results whenever any restaurants match. The tour is the stops
+picked by the "Close to each other" filter, or otherwise the top restaurants,
+with a "Stops in tour" slider (up to 15, default 5).
+
+**Visit order.**
+
+- When the visit day and time filter is on, the stops keep the opening-hours
+  order from the previous section, and stops that don't fit the window are
+  left off the map.
+- Otherwise the app builds a short walking route. It tries each stop as the
+  first one, walks to the nearest unvisited stop each time (nearest
+  neighbor), then reverses any stretch of the route that makes it shorter
+  (2-opt), and keeps the shortest result. The route is one-way and does not
+  return to the first stop. With up to 15 stops this takes well under a
+  second.
+- When "Close to a starting point" uses a landmark, the walk starts at that
+  landmark, which appears on the map as a blue "S" marker.
+
+**Table and map.** The table adds a `walk order` (in walking mode), a
+`walk from previous` column with each leg's straight-line miles, and a
+`walked so far` running total. A metric shows the total walk. The map draws
+numbered markers (1, 2, 3, ...) connected by lines in visiting order;
+hovering a marker shows the name, address, and leg distance.
+
+**Why not an embedded Google map.** Google's embedded maps and its
+JavaScript, Directions, and Distance Matrix APIs all need a Google Cloud API
+key with billing turned on, and the key would have to be stored and kept out
+of the repository. Instead:
+
+- The map uses pydeck (already installed with Streamlit) on CARTO's free
+  basemap, which is built on OpenStreetMap data and needs no key or account.
+- An "Open walking route in Google Maps" button uses Google's documented,
+  key-free directions link
+  (`https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=...&travelmode=walking`)
+  with each stop's Yelp coordinates, in the same order. Google then shows real
+  street-by-street walking directions, distance, and time. One link holds at
+  most 11 points (origin, destination, and 9 stops in between), so a longer
+  route is split into parts, each starting where the previous one ended.
+
+Distances on the map and in the table are straight-line miles, which are
+usually 20-40% shorter than the real walk; the app says so next to the map. A
+free routing service (for example a public OSRM server) could supply walking
+distances, but public servers are rate-limited and not meant for production,
+so it is left as a future option.
+
+Unit tests in `tests/test_route.py` cover the walking order (including a
+fixed start and text coordinates from the CSV), the 2-opt step, leg and
+total distances, the Google Maps links (waypoint order, start as origin,
+splitting long routes, single stops), and the map markers, line, and zoom.
+
 ## Planned next features
 
 - Geographic clustering of suitable restaurants
-- Interactive map display
 - Calendar-date filtering for holidays and special closures
 - Visit-order refinements: use walking distance between stops instead of a
   fixed minutes-per-stop pace, and try alternative orders so a stop that closes
