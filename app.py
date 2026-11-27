@@ -23,6 +23,7 @@ from food_tour.distance import (  # noqa: E402
     filter_near_start,
     max_pairwise_miles,
     select_close_together,
+    stop_shortfall_message,
 )
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
@@ -204,6 +205,10 @@ if filter_by_distance and filtered:
         )
 elif filter_by_distance and ranked:
     st.warning("No restaurants fit within that distance. Try a larger limit.")
+if filter_by_distance and distance_mode == CLOSE_TOGETHER:
+    shortfall = stop_shortfall_message(max_stops, len(filtered))
+    if shortfall:
+        st.warning(shortfall)
 if filter_by_visit:
     st.caption(
         "Restaurants qualify if they are open at any point in the selected "
