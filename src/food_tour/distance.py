@@ -108,3 +108,18 @@ def max_pairwise_miles(rows: list[dict[str, Any]]) -> float:
         ),
         default=0.0,
     )
+
+
+def stop_shortfall_message(requested: int, found: int) -> str | None:
+    """Explain when fewer stops fit the filters than the user asked for.
+
+    Returns ``None`` when the tour has as many stops as requested.
+    """
+    if found >= requested:
+        return None
+    noun = "restaurant fits" if found == 1 else "restaurants fit"
+    return (
+        f"You asked for {requested} stops, but only {found} {noun} your "
+        f"filters. Try a larger distance, fewer minimum reviews, or a wider "
+        f"visit window."
+    )

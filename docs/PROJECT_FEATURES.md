@@ -111,7 +111,10 @@ longitude; no routing service or API key is needed. The app offers two modes:
   joins the tour only if it is within the chosen limit of every stop already
   selected. The #1 restaurant is always the first stop, the largest gap
   between any two stops never exceeds the limit, and a "Number of stops"
-  slider caps the tour length (2 to 15).
+  slider caps the tour length (2 to 15). When fewer restaurants fit than the
+  slider asks for, the app shows a warning such as "You asked for 5 stops, but
+  only 3 restaurants fit your filters," with a hint to loosen the distance,
+  minimum reviews, or visit window.
 - **Close to a starting point.** Keeps every ranked restaurant within the limit
   of a start: the top-ranked restaurant or one of eight landmarks (City Hall,
   Reading Terminal Market, Independence Hall, Italian Market, South Street,
@@ -130,7 +133,8 @@ Tested with the team's Philadelphia files (6,159 restaurants). For Philly
 Cheesesteak with a 1-mile, 5-stop limit, the filter returns five spots whose
 farthest pair is 0.97 miles apart. Starting at the Italian Market with a 1-mile
 radius keeps 108 of 535 cheesesteak restaurants. Unit tests cover the distance
-formula, both modes, the stop limit, and empty inputs.
+formula, both modes, the stop limit, the fewer-stops-than-requested message,
+and empty inputs.
 
 ## Planned next features
 

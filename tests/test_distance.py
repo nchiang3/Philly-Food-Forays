@@ -7,6 +7,7 @@ from src.food_tour.distance import (
     haversine_miles,
     max_pairwise_miles,
     select_close_together,
+    stop_shortfall_message,
 )
 
 
@@ -74,6 +75,24 @@ class SelectCloseTogetherTests(unittest.TestCase):
     def test_empty(self) -> None:
         self.assertEqual(select_close_together([], 1.0), [])
         self.assertEqual(max_pairwise_miles([]), 0.0)
+
+
+class StopShortfallMessageTests(unittest.TestCase):
+    def test_no_message_when_enough_stops(self) -> None:
+        self.assertIsNone(stop_shortfall_message(5, 5))
+
+    def test_message_names_requested_and_found(self) -> None:
+        message = stop_shortfall_message(5, 3)
+        self.assertIn("You asked for 5 stops, but only 3 restaurants fit", message)
+
+    def test_singular_wording(self) -> None:
+        self.assertIn("only 1 restaurant fits", stop_shortfall_message(4, 1))
+
+    def test_close_together_shortfall(self) -> None:
+        # Only three Center City spots are within half a mile of each other.
+        tour = select_close_together(RANKED, 0.5, max_stops=5)
+        self.assertEqual(len(tour), 3)
+        self.assertIn("only 3 restaurants", stop_shortfall_message(5, len(tour)))
 
 
 if __name__ == "__main__":
