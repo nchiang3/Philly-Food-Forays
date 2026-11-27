@@ -16,6 +16,14 @@ from food_tour.data_access import (  # noqa: E402
     load_restaurants,
     summarize_reviews,
 )
+from food_tour.distance import (  # noqa: E402
+    DISTANCE_COLUMN,
+    LANDMARKS,
+    TOP_RANKED_START,
+    filter_near_start,
+    max_pairwise_miles,
+    select_close_together,
+)
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import rank_restaurants  # noqa: E402
@@ -123,7 +131,36 @@ if filter_by_visit:
         format_func=format_visit_time,
     )
 
-filtered = rank_restaurants(
+CLOSE_TOGETHER = "Close to each other"
+NEAR_START = "Close to a starting point"
+
+filter_by_distance = st.toggle(
+    "Keep top spots within walking distance", value=False
+)
+distance_mode = None
+max_miles = None
+if filter_by_distance:
+    distance_column_a, distance_column_b, distance_column_c = st.columns(3)
+    distance_mode = distance_column_a.radio(
+        "Measure distance",
+        [CLOSE_TOGETHER, NEAR_START],
+        help=(
+            "Close to each other: every stop is within the limit of every "
+            "other stop. Close to a starting point: every stop is within the "
+            "limit of the chosen start."
+        ),
+    )
+    max_miles = distance_column_b.slider(
+        "Maximum distance (miles)", 0.25, 5.0, 1.0, step=0.25
+    )
+    if distance_mode == CLOSE_TOGETHER:
+        max_stops = distance_column_c.slider("Number of stops", 2, 15, 5)
+    else:
+        start_name = distance_column_c.selectbox(
+            "Starting point", [TOP_RANKED_START, *LANDMARKS]
+        )
+
+ranked = rank_restaurants(
     restaurants,
     food_sentiment,
     selected_food,
@@ -134,7 +171,39 @@ filtered = rank_restaurants(
     visit_end_time,
 )
 
+filtered = ranked
+if filter_by_distance:
+    limit_label = f"{max_miles:g} mile" + ("" if max_miles == 1 else "s")
+    if distance_mode == CLOSE_TOGETHER:
+        filtered = select_close_together(ranked, max_miles, max_stops)
+    else:
+        filtered = filter_near_start(ranked, max_miles, LANDMARKS.get(start_name))
+
 st.caption(f"Showing {len(filtered):,} matching restaurants")
+if filter_by_distance and filtered:
+    if distance_mode == CLOSE_TOGETHER:
+        st.caption(
+            f"Picked in ranking order, keeping each spot only if it is within "
+            f"{limit_label} of every spot already chosen. The farthest "
+            f"two stops are {max_pairwise_miles(filtered):.2f} miles apart. "
+            f"Distances are straight-line from the #1 spot; walking routes "
+            f"are usually 20-40% longer."
+        )
+    else:
+        farthest = max(row[DISTANCE_COLUMN] for row in filtered)
+        start_label = (
+            "the top-ranked restaurant"
+            if start_name == TOP_RANKED_START
+            else start_name
+        )
+        st.caption(
+            f"Restaurants within {limit_label} (straight line) of "
+            f"{start_label}. "
+            f"The farthest is {farthest:.2f} miles away; walking routes are "
+            f"usually 20-40% longer."
+        )
+elif filter_by_distance and ranked:
+    st.warning("No restaurants fit within that distance. Try a larger limit.")
 if filter_by_visit:
     st.caption(
         "Restaurants qualify if they are open at any point in the selected "
@@ -149,6 +218,7 @@ st.dataframe(
         "food positive sentiment": st.column_config.NumberColumn(format="percent"),
         "volume-adjusted sentiment": st.column_config.NumberColumn(format="percent"),
         "food review stars": st.column_config.NumberColumn(format="%.2f"),
+        DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
     },
 )
 st.caption(
