@@ -25,6 +25,12 @@ from food_tour.distance import (  # noqa: E402
     select_close_together,
     stop_shortfall_message,
 )
+from food_tour.chains import (  # noqa: E402
+    CHAIN_LOCATIONS_COLUMN,
+    collapse_chains,
+    merged_chain_count,
+    select_close_together_one_per_chain,
+)
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import rank_restaurants  # noqa: E402
@@ -135,6 +141,14 @@ if filter_by_visit:
 CLOSE_TOGETHER = "Close to each other"
 NEAR_START = "Close to a starting point"
 
+one_per_chain = st.toggle(
+    "Show one location per chain",
+    value=True,
+    help=(
+        "Chains such as Wawa appear once, using the location closest to the "
+        "other top-ranked spots."
+    ),
+)
 filter_by_distance = st.toggle(
     "Keep top spots within walking distance", value=False
 )
@@ -175,12 +189,30 @@ ranked = rank_restaurants(
 filtered = ranked
 if filter_by_distance:
     limit_label = f"{max_miles:g} mile" + ("" if max_miles == 1 else "s")
-    if distance_mode == CLOSE_TOGETHER:
+    if distance_mode == CLOSE_TOGETHER and one_per_chain:
+        filtered = select_close_together_one_per_chain(ranked, max_miles, max_stops)
+    elif distance_mode == CLOSE_TOGETHER:
         filtered = select_close_together(ranked, max_miles, max_stops)
     else:
         filtered = filter_near_start(ranked, max_miles, LANDMARKS.get(start_name))
+        if one_per_chain:
+            filtered = collapse_chains(filtered)
+elif one_per_chain:
+    filtered = collapse_chains(ranked)
 
 st.caption(f"Showing {len(filtered):,} matching restaurants")
+chain_count = merged_chain_count(filtered) if one_per_chain else 0
+if chain_count:
+    chain_label = "1 chain is shown once" if chain_count == 1 else (
+        f"{chain_count:,} chains are shown once each"
+    )
+    st.caption(
+        f"{chain_label}, using "
+        f"the location closest to the other top spots (see the "
+        f"'{CHAIN_LOCATIONS_COLUMN}' column). A chain keeps the rank of its "
+        f"best-reviewed location; the row shows the chosen location's own "
+        f"scores."
+    )
 if filter_by_distance and filtered:
     if distance_mode == CLOSE_TOGETHER:
         st.caption(

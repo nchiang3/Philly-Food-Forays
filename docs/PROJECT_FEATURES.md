@@ -90,6 +90,8 @@ The app currently provides:
 - Optional visit-window filtering that includes restaurants open at any point
   between the selected start and end times
 - Adjustable minimum number of food-specific reviews
+- One location per chain restaurant, choosing the location nearest the other
+  top picks (see below)
 - Optional distance filtering that keeps recommended spots within walking
   distance (see below)
 - Ranked restaurant results with transparent component metrics
@@ -135,6 +137,35 @@ farthest pair is 0.97 miles apart. Starting at the Italian Market with a 1-mile
 radius keeps 108 of 535 cheesesteak restaurants. Unit tests cover the distance
 formula, both modes, the stop limit, the fewer-stops-than-requested message,
 and empty inputs.
+
+## One location per chain
+
+`src/food_tour/chains.py` keeps a tour from listing the same chain several
+times (for example, three Wawas). A "Show one location per chain" toggle, on by
+default, merges rows whose names match after ignoring case, accents,
+apostrophes, punctuation, a leading "The", and "&" versus "and". Names must
+otherwise match, so "Wawa" and "Wawa Welcome America" stay separate.
+
+The chain keeps the rank of its best-reviewed location, and the app shows the
+location closest to the rest of the tour, along with that location's own
+scores. A `chain locations` column counts how many locations were merged, and a
+caption notes how many chains were collapsed. How "closest" is measured depends
+on the distance setting:
+
+- **No distance filter.** The chosen location has the smallest average
+  straight-line distance to the best location of each of the top 10 other
+  restaurants or chains.
+- **Close to each other.** Each chain is considered once, at the rank of its
+  best location. Among its locations within the limit of every stop already
+  chosen, the one with the smallest average distance to those stops joins the
+  tour, so a chain is skipped only when none of its locations fit. If the chain
+  is the first stop, the top 10 other restaurants are the reference instead.
+- **Close to a starting point.** Locations outside the radius are dropped
+  first, then the remaining locations of each chain are compared as in the
+  no-filter case.
+
+Unit tests in `tests/test_chains.py` cover name matching, the location choice
+in each mode, rank preservation, unnamed rows, and empty inputs.
 
 ## Planned next features
 
