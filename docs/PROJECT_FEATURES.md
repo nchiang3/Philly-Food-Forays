@@ -94,6 +94,8 @@ The app currently provides:
   top picks (see below)
 - Optional distance filtering that keeps recommended spots within walking
   distance (see below)
+- A suggested visit order with approximate arrival times, based on each
+  stop's opening hours within the visit window (see below)
 - Ranked restaurant results with transparent component metrics
 - Optional upload and validation of the full review JSONL
 
@@ -167,13 +169,48 @@ on the distance setting:
 Unit tests in `tests/test_chains.py` cover name matching, the location choice
 in each mode, rank preservation, unnamed rows, and empty inputs.
 
+## Visit order by opening hours
+
+`src/food_tour/schedule.py` turns the tour into a timed plan when the visit
+day and time filter is on. A "Suggested visit order" table appears below the
+ranked results with a `visit order`, an approximate `arrive around` time, the
+day's hours, and the score (plus `miles from start` when a distance filter is
+on). The stops scheduled are the tour picked by the "Close to each other"
+filter, or otherwise the top restaurants, with a "Stops to schedule" slider
+(up to 15, default 5).
+
+The plan starts at the window's start time and repeatedly picks the stop that
+can be visited soonest:
+
+- Restaurants open at the start come first. A restaurant that opens later is
+  scheduled once it opens, and the plan waits for it only when nothing else is
+  open.
+- Among stops available at the same time, the one that closes sooner goes
+  first, then the higher-ranked one.
+- Every stop must be reached before it closes and before the window ends. Each
+  visit, including walking to the next stop, takes a fixed "Minutes per stop"
+  (15 to 120, default 45).
+- Stops that cannot be reached in the window are listed last as "Doesn't fit
+  window", with a warning suggesting fewer minutes per stop, fewer stops, or a
+  later end time.
+
+Overnight hours from the previous day count (a Sunday 8 PM–3 AM bar is open at
+1 AM on Monday). Times are approximate because walking time between stops is
+folded into the per-stop minutes rather than routed. The raw Yelp hours travel
+with each ranked row in a hidden `hours_json` column.
+
+Unit tests in `tests/test_schedule.py` cover open-at-start ordering, waiting
+for a later opening, the closing-time and rank tie-breaks, stops that close or
+fall past the window, overnight hours, and invalid inputs.
+
 ## Planned next features
 
 - Geographic clustering of suitable restaurants
 - Interactive map display
 - Calendar-date filtering for holidays and special closures
-- Visit-order optimization that prioritizes restaurants open at the start while
-  scheduling later-opening options within the selected time window
+- Visit-order refinements: use walking distance between stops instead of a
+  fixed minutes-per-stop pace, and try alternative orders so a stop that closes
+  early is never crowded out
 - User control over rating versus travel-distance preference
 - A compact food-tour recommendation view
 - Smarter "close to each other" seeding: try each of the top 10 restaurants as

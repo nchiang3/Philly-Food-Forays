@@ -13,6 +13,7 @@ SENTIMENT_WEIGHT = 0.45
 FOOD_REVIEW_VOLUME_WEIGHT = 0.40
 OVERALL_REVIEW_VOLUME_WEIGHT = 0.15
 PRIOR_STRENGTH = 20
+HOURS_JSON_COLUMN = "hours_json"
 
 
 def rank_restaurants(
@@ -99,6 +100,8 @@ def rank_restaurants(
             "food review stars": float(sentiment["average_review_stars"]),
             "latitude": float(restaurant["latitude"]),
             "longitude": float(restaurant["longitude"]),
+            # Raw Yelp hours, kept for visit-order planning; hidden in the app.
+            HOURS_JSON_COLUMN: restaurant.get("hours_json"),
         }
         if visit_day is not None:
             result[f"{visit_day} hours"] = format_day_hours(

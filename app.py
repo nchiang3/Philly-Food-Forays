@@ -33,7 +33,14 @@ from food_tour.chains import (  # noqa: E402
 )
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
-from food_tour.ranking import rank_restaurants  # noqa: E402
+from food_tour.ranking import HOURS_JSON_COLUMN, rank_restaurants  # noqa: E402
+from food_tour.schedule import (  # noqa: E402
+    ARRIVAL_COLUMN,
+    DEFAULT_MINUTES_PER_STOP,
+    VISIT_ORDER_COLUMN,
+    plan_visit_order,
+    unscheduled_message,
+)
 
 
 VISIT_TIMES = [time(hour, minute) for hour in range(24) for minute in (0, 30)]
@@ -256,12 +263,76 @@ st.dataframe(
         "volume-adjusted sentiment": st.column_config.NumberColumn(format="percent"),
         "food review stars": st.column_config.NumberColumn(format="%.2f"),
         DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
+        HOURS_JSON_COLUMN: None,
     },
 )
 st.caption(
     "Recommendation score: 45% volume-adjusted food sentiment, 40% "
     "food-specific review volume, and 15% overall Yelp review volume."
 )
+
+if filter_by_visit and filtered:
+    st.subheader("Suggested visit order")
+    order_column_a, order_column_b = st.columns(2)
+    minutes_per_stop = order_column_a.slider(
+        "Minutes per stop (eating plus walking)",
+        15,
+        120,
+        DEFAULT_MINUTES_PER_STOP,
+        step=5,
+    )
+    if filter_by_distance and distance_mode == CLOSE_TOGETHER:
+        tour_stops = filtered
+        order_column_b.caption(
+            f"Scheduling the {len(tour_stops)} stops picked above."
+        )
+    else:
+        stop_limit = min(15, len(filtered))
+        stops_to_plan = (
+            order_column_b.slider(
+                "Stops to schedule", 1, stop_limit, min(5, stop_limit)
+            )
+            if stop_limit > 1
+            else 1
+        )
+        tour_stops = filtered[:stops_to_plan]
+    plan = plan_visit_order(
+        tour_stops,
+        visit_day,
+        visit_start_time,
+        visit_end_time,
+        minutes_per_stop,
+    )
+    plan_columns = [
+        VISIT_ORDER_COLUMN,
+        ARRIVAL_COLUMN,
+        "name",
+        "address",
+        f"{visit_day} hours",
+        "recommendation score",
+    ]
+    if any(DISTANCE_COLUMN in row for row in plan):
+        plan_columns.append(DISTANCE_COLUMN)
+    st.dataframe(
+        [{column: row.get(column) for column in plan_columns} for row in plan],
+        width="stretch",
+        hide_index=True,
+        column_config={
+            VISIT_ORDER_COLUMN: st.column_config.NumberColumn(format="%d"),
+            DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
+        },
+    )
+    st.caption(
+        f"Starting at {format_visit_time(visit_start_time)}, each next stop is "
+        f"the one you can visit soonest: places open at the start come first, "
+        f"and later-opening places are scheduled after they open. Ties go to "
+        f"the place that closes sooner, then the higher-ranked one. Every stop "
+        f"is reached before it closes and before "
+        f"{format_visit_time(visit_end_time)}. Times are approximate."
+    )
+    unscheduled = unscheduled_message(plan)
+    if unscheduled:
+        st.warning(unscheduled)
 
 st.subheader("Review data")
 if review_upload is None:
