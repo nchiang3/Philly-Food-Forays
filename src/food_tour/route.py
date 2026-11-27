@@ -7,11 +7,13 @@ from typing import Any
 from urllib.parse import urlencode
 
 from .distance import haversine_miles
+from .walking import WalkingRoute
 
 
 WALK_ORDER_COLUMN = "walk order"
 LEG_COLUMN = "walk from previous"
 CUMULATIVE_COLUMN = "walked so far"
+WALK_MINUTES_COLUMN = "walking minutes"
 
 # Google Maps direction links accept an origin, a destination, and up to nine
 # waypoints, so one link covers at most 11 points.
@@ -108,25 +110,57 @@ def order_walking_route(
 
 
 def add_route_legs(
-    stops: list[dict[str, Any]], start: Point | None = None
+    stops: list[dict[str, Any]],
+    start: Point | None = None,
+    walking: WalkingRoute | None = None,
 ) -> list[dict[str, Any]]:
-    """Add straight-line miles for each leg and the running total.
+    """Add miles for each leg and the running total.
 
     ``stops`` must already be in visiting order. The first leg is measured
-    from ``start`` when given, and is 0 otherwise.
+    from ``start`` when given, and is 0 otherwise. With a ``walking`` route
+    (from :func:`food_tour.walking.fetch_walking_route` for the same points),
+    legs use its street walking miles and rows also gain ``walking minutes``;
+    otherwise legs are straight-line miles.
     """
+    legs: list[float | None] = []
+    minutes: list[float | None] = []
+    if walking is not None:
+        expected = len(stops) if start is not None else max(len(stops) - 1, 0)
+        if len(walking.leg_miles) != expected:
+            raise ValueError("The walking route has the wrong number of legs.")
+        legs = list(walking.leg_miles)
+        minutes = list(walking.leg_minutes)
+        if start is None and stops:
+            legs.insert(0, 0.0)
+            minutes.insert(0, 0.0)
+
     rows: list[dict[str, Any]] = []
     previous = start
     total = 0.0
-    for row in stops:
+    for position, row in enumerate(stops):
         here = _point(row)
-        leg = haversine_miles(*previous, *here) if previous is not None else 0.0
+        if walking is not None:
+            leg = legs[position]
+        else:
+            leg = haversine_miles(*previous, *here) if previous is not None else 0.0
         total += leg
-        rows.append(
-            {**row, LEG_COLUMN: round(leg, 2), CUMULATIVE_COLUMN: round(total, 2)}
-        )
+        new_row = {
+            **row,
+            LEG_COLUMN: round(leg, 2),
+            CUMULATIVE_COLUMN: round(total, 2),
+        }
+        if walking is not None:
+            new_row[WALK_MINUTES_COLUMN] = round(minutes[position])
+        rows.append(new_row)
         previous = here
     return rows
+
+
+def route_points(
+    stops: list[dict[str, Any]], start: Point | None = None
+) -> list[Point]:
+    """Return ``(latitude, longitude)`` for the start (if any) and each stop."""
+    return _route_points(stops, start)
 
 
 def total_route_miles(
@@ -208,12 +242,18 @@ def map_markers(
     for position, row in enumerate(stops, start=1):
         latitude, longitude = _point(row)
         leg = row.get(LEG_COLUMN)
+        minutes = row.get(WALK_MINUTES_COLUMN)
+        leg_text = "" if leg is None else f"{leg:.2f} mi"
+        if leg_text and minutes is not None:
+            leg_text += f" ({minutes:.0f} min walk)"
+        if leg_text:
+            leg_text += " from previous stop"
         markers.append(
             {
                 "label": str(position),
                 "title": f"{position}. {row.get('name', '')}",
                 "address": row.get("address", "") or "",
-                "leg": "" if leg is None else f"{leg:.2f} mi from previous stop",
+                "leg": leg_text,
                 "latitude": latitude,
                 "longitude": longitude,
                 "is_start": False,

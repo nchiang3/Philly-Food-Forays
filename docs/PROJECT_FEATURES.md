@@ -104,9 +104,9 @@ The app currently provides:
   top picks (see below)
 - Optional distance filtering that keeps recommended spots within walking
   distance (see below)
-- A "Your tour" section with a map of the stops numbered in walking order,
-  straight-line miles per leg and in total, and a link that opens the same
-  route as walking directions in Google Maps (see below)
+- A "Your tour" section with a map of the stops numbered in walking order
+  and joined by the street walking route, walking miles and minutes per leg
+  and in total, and a link that opens the same route as walking directions in Google Maps (see below)
 - A suggested visit order with approximate arrival times, based on each
   stop's opening hours within the visit window (see below)
 - Ranked restaurant results with transparent component metrics
@@ -238,11 +238,36 @@ with a "Stops in tour" slider (up to 15, default 5).
 - When "Close to a starting point" uses a landmark, the walk starts at that
   landmark, which appears on the map as a blue "S" marker.
 
+**Street walking routes.** `src/food_tour/walking.py` asks the free FOSSGIS
+OSRM server (`routing.openstreetmap.de/routed-foot`) for a walking route
+through the stops in order. It routes on OpenStreetMap streets, sidewalks,
+and paths with a pedestrian profile, and needs no API key or account. One
+request covers the whole tour and returns the street-following line for the
+map plus the distance and walking time of each leg. The visiting order itself
+is still chosen with straight-line distances, which keeps the order instant
+and the request count to one per tour.
+
+- The server is a donated public service with a fair-use policy, so the app
+  sends a descriptive User-Agent, waits at most 10 seconds, and caches each
+  route for a day (`st.cache_data`), so moving sliders back and forth does
+  not resend the same request. Failed requests are not cached.
+- If the server is slow, down, or returns an unexpected answer, the app falls
+  back to straight lines and straight-line miles, and shows a note that real
+  walks are usually 20-40% longer.
+- The free server is fine for a class project and demos. A deployment with
+  heavy traffic should run its own OSRM or Valhalla server, or use a paid
+  service such as OpenRouteService or Google; only `FOOT_ROUTING_URL` in
+  `walking.py` would need to change for another OSRM server.
+
 **Table and map.** The table adds a `walk order` (in walking mode), a
-`walk from previous` column with each leg's straight-line miles, and a
-`walked so far` running total. A metric shows the total walk. The map draws
-numbered markers (1, 2, 3, ...) connected by lines in visiting order;
-hovering a marker shows the name, address, and leg distance.
+`walk from previous` column with each leg's miles along the streets, a
+`walking minutes` column, and a `walked so far` running total (straight-line
+miles, without minutes, in the fallback). Metrics show the total walk and
+walking time. The map draws numbered markers (1, 2, 3, ...) joined by the
+street route in visiting order; hovering a marker shows the name, address,
+and leg distance and time. Walking times assume a steady pace and leave out
+time spent eating. The opening-hours schedule still uses the fixed
+"Minutes per stop" pace.
 
 **Why not an embedded Google map.** Google's embedded maps and its
 JavaScript, Directions, and Distance Matrix APIs all need a Google Cloud API
@@ -259,22 +284,20 @@ of the repository. Instead:
   most 11 points (origin, destination, and 9 stops in between), so a longer
   route is split into parts, each starting where the previous one ended.
 
-Distances on the map and in the table are straight-line miles, which are
-usually 20-40% shorter than the real walk; the app says so next to the map. A
-free routing service (for example a public OSRM server) could supply walking
-distances, but public servers are rate-limited and not meant for production,
-so it is left as a future option.
-
 Unit tests in `tests/test_route.py` cover the walking order (including a
 fixed start and text coordinates from the CSV), the 2-opt step, leg and
 total distances, the Google Maps links (waypoint order, start as origin,
 splitting long routes, single stops), and the map markers, line, and zoom.
+`tests/test_walking.py` uses a canned routing response, without network
+access, to cover the request URL and User-Agent, parsing legs and the route
+line, rejecting bad or mismatched answers, the offline fallback, and street
+legs and minutes in the table and tooltips.
 
 ## Planned next features
 
 - Geographic clustering of suitable restaurants
 - Calendar-date filtering for holidays and special closures
-- Visit-order refinements: use walking distance between stops instead of a
+- Visit-order refinements: use the street walking time between stops instead of a
   fixed minutes-per-stop pace, and try alternative orders so a stop that closes
   early is never crowded out
 - User control over rating versus travel-distance preference
@@ -286,8 +309,6 @@ splitting long routes, single stops), and the map markers, line, and zoom.
   South Philadelphia.
 - Custom starting point: type an address or use the browser's location instead
   of picking a landmark
-- Walking distance and time from a routing service instead of straight-line
-  miles
 - Review food-matching false positives found while testing distance filters
   (for example, Morimoto appearing among Water Ice results)
 - Load files automatically from `data/processed/` when running locally, so

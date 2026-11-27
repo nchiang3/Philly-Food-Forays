@@ -22,6 +22,7 @@ Our goal is to use machine learning to identify restaurants with positive custom
 | `src/food_tour/food_matching.py` | Normalizes review text and matches the seven supported foods, aliases, and misspellings. |
 | `src/food_tour/ranking.py` | Scores restaurants using sentiment and food-specific and overall review volume. |
 | `src/food_tour/route.py` | Orders tour stops into a short walking route, measures each leg, and builds the map data and Google Maps links. |
+| `src/food_tour/walking.py` | Fetches street walking routes, distances, and times from the free FOSSGIS OSRM server, with a straight-line fallback. |
 | `tests/` | Automated tests for preprocessing, uploads, food matching, and ranking. |
 | `docs/PROJECT_FEATURES.md` | Detailed summary of application features, models, and current limitations. |
 | `docs/TEAM_GIT_WORKFLOW.md` | Team instructions for setup, branches, pull requests, merging, and local updates. |
