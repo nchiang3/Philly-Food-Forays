@@ -69,24 +69,40 @@ with st.expander("How to prepare the files", expanded=False):
         language="bash",
     )
 
-restaurant_upload = st.file_uploader(
-    "Philadelphia restaurant CSV",
-    type=["csv"],
-    max_upload_size=25,
-    help="Expected file: philadelphia_restaurants.csv (approximately 6.35 MB).",
+# The uploaders' keys hold the current files in session state before the
+# widgets render, so the expander can stay open until both required files
+# are in and then collapse on the next rerun.
+required_uploads_present = (
+    st.session_state.get("restaurant_upload") is not None
+    and st.session_state.get("sentiment_upload") is not None
 )
-review_upload = st.file_uploader(
-    "Philadelphia review JSONL (optional; needed only for training/validation)",
-    type=["jsonl"],
-    max_upload_size=650,
-    help="Expected file: philadelphia_reviews.jsonl (approximately 535 MB).",
-)
-sentiment_upload = st.file_uploader(
-    "Food sentiment summary CSV",
-    type=["csv"],
-    max_upload_size=25,
-    help="Expected file: food_sentiment.csv, created by build_food_sentiment.py.",
-)
+
+with st.expander("Upload files here", expanded=not required_uploads_present):
+    upload_column_a, upload_column_b, upload_column_c = st.columns(3)
+    with upload_column_a:
+        restaurant_upload = st.file_uploader(
+            "Philadelphia restaurant CSV",
+            type=["csv"],
+            max_upload_size=25,
+            key="restaurant_upload",
+            help="Expected file: philadelphia_restaurants.csv (approximately 6.35 MB).",
+        )
+    with upload_column_b:
+        review_upload = st.file_uploader(
+            "Philadelphia review JSONL (optional; needed only for training/validation)",
+            type=["jsonl"],
+            max_upload_size=650,
+            key="review_upload",
+            help="Expected file: philadelphia_reviews.jsonl (approximately 535 MB).",
+        )
+    with upload_column_c:
+        sentiment_upload = st.file_uploader(
+            "Food sentiment summary CSV",
+            type=["csv"],
+            max_upload_size=25,
+            key="sentiment_upload",
+            help="Expected file: food_sentiment.csv, created by build_food_sentiment.py.",
+        )
 
 if restaurant_upload is None:
     st.info("Upload the restaurant CSV to begin.")

@@ -83,7 +83,9 @@ because it has the most reviews.
 
 The app currently provides:
 
-- Temporary upload of locally generated datasets
+- Temporary upload of locally generated datasets, with the three uploaders
+  side by side in a collapsible "Upload files here" section that starts open
+  and collapses once the restaurant and food sentiment CSVs are uploaded
 - Selection from the seven supported foods
 - Open-business filtering
 - Readable weekly opening hours from the Yelp business dataset
