@@ -60,6 +60,11 @@ def _display_time(total_minutes: int) -> str:
     return f"{display_hour}:{minute:02d} {suffix}"
 
 
+def format_clock(total_minutes: int) -> str:
+    """Format minutes after midnight as a 12-hour time, such as 1:30 PM."""
+    return _display_time(total_minutes % (24 * 60))
+
+
 def format_day_hours(hours_json: str | None, weekday: str) -> str:
     """Format one day's hours for display."""
     intervals = _intervals(_load_hours(hours_json).get(weekday))
@@ -126,22 +131,34 @@ def is_open_during(
     if window_end <= window_start:
         raise ValueError("End time must be later than start time.")
 
+    return any(
+        open_start < window_end and open_end > window_start
+        for open_start, open_end in open_intervals(hours_json, weekday)
+    )
+
+
+def open_intervals(hours_json: str | None, weekday: str) -> list[tuple[int, int]]:
+    """Return the minutes of ``weekday`` (0 to 1440) when the business is open.
+
+    Overnight ranges are split at midnight: the evening part counts on
+    ``weekday``, and the previous day's after-midnight part also counts on
+    ``weekday``. "0:0-0:0" means open all day. Intervals are sorted by start.
+    """
+    if weekday not in WEEKDAYS:
+        raise ValueError(f"Unknown weekday: {weekday}")
+
     hours = _load_hours(hours_json)
-    open_intervals: list[tuple[int, int]] = []
+    intervals: list[tuple[int, int]] = []
     for start, end in _intervals(hours.get(weekday)):
         if start == end:
-            open_intervals.append((0, 24 * 60))
+            intervals.append((0, 24 * 60))
         elif start < end:
-            open_intervals.append((start, end))
+            intervals.append((start, end))
         else:
-            open_intervals.append((start, 24 * 60))
+            intervals.append((start, 24 * 60))
 
     previous_day = WEEKDAYS[(WEEKDAYS.index(weekday) - 1) % len(WEEKDAYS)]
     for start, end in _intervals(hours.get(previous_day)):
         if start > end:
-            open_intervals.append((0, end))
-
-    return any(
-        open_start < window_end and open_end > window_start
-        for open_start, open_end in open_intervals
-    )
+            intervals.append((0, end))
+    return sorted(intervals)
