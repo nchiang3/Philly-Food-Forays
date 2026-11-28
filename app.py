@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import sys
+from base64 import b64encode
 from datetime import time
 from pathlib import Path
 
 import pydeck as pdk
 import streamlit as st
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+APP_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(APP_DIR / "src"))
 
 from food_tour.data_access import (  # noqa: E402
     DatasetValidationError,
@@ -73,11 +75,21 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🥨 Philly Food Forays")
-st.write(
-    "Upload your locally generated Philadelphia datasets. Files are used only "
-    "for the active Streamlit session and are not added to this repository."
+st.html(APP_DIR / "assets" / "theme.css")
+bell_image = b64encode((APP_DIR / "assets" / "liberty-bell.webp").read_bytes()).decode("ascii")
+st.html(
+    f"""
+    <div class="food-forays-hero">
+      <img src="data:image/webp;base64,{bell_image}" alt="" class="food-forays-bell">
+      <div class="food-forays-intro">
+        <h1>Philly Food Forays</h1>
+        <p>Find Philly’s signature foods and turn your favorite stops into a walking tour.</p>
+      </div>
+    </div>
+    """
 )
+
+st.caption("Your uploaded files are used only for the active Streamlit session.")
 
 with st.expander("How to prepare the files", expanded=False):
     st.code(

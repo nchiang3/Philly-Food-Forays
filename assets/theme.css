@@ -1,0 +1,90 @@
+.stMainBlockContainer {
+    max-width: 78rem;
+    padding-top: 4rem;
+}
+
+.food-forays-hero {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    min-height: 19rem;
+    overflow: hidden;
+    padding: clamp(1.5rem, 5vw, 4.5rem);
+    border: 1px solid #ebd3c8;
+    border-top: 0.35rem solid #a62336;
+    border-radius: 1.25rem;
+    background: linear-gradient(110deg, #fff 5%, #fff8ee 57%, #f5dfce 100%);
+}
+
+.food-forays-bell {
+    position: absolute;
+    z-index: -1;
+    inset-block-start: 50%;
+    inset-inline-end: 2%;
+    width: 44%;
+    height: 126%;
+    object-fit: contain;
+    transform: translateY(-50%);
+    opacity: 0.72;
+}
+
+.food-forays-intro {
+    max-width: 57%;
+}
+
+.food-forays-hero h1 {
+    margin: 0 0 0.85rem;
+    padding: 0;
+    color: #851d2e;
+    font-family: Georgia, serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 1;
+}
+
+.food-forays-hero p {
+    max-width: 33ch;
+    margin: 0;
+    color: #4d3433;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.5;
+}
+
+.stMain [data-testid="stExpander"] > details,
+.stMain [data-testid="stVerticalBlockBorderWrapper"] > div[style*="border"],
+.stMain [data-testid="stMetric"] {
+    border-radius: 0.8rem;
+    background: #fff;
+}
+
+.stMain [data-testid="stMetric"] {
+    padding: 0.85rem 1rem;
+    border: 1px solid #e7d4cd;
+}
+
+.stMain [data-testid="stMetricValue"],
+.stMain [data-testid="stHeading"] h3 {
+    color: #851d2e;
+}
+
+@media (max-width: 640px) {
+    .stMainBlockContainer {
+        padding-top: 3.5rem;
+    }
+
+    .food-forays-hero {
+        min-height: 14rem;
+    }
+
+    .food-forays-intro {
+        max-width: 28rem;
+    }
+
+    .food-forays-bell {
+        inset-inline-end: -14%;
+        width: 76%;
+        opacity: 0.15;
+    }
+}
