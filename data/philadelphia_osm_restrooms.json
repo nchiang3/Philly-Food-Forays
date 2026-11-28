@@ -1,0 +1,865 @@
+{
+  "attribution": "© OpenStreetMap contributors, ODbL 1.0",
+  "license": "https://www.openstreetmap.org/copyright",
+  "source": "https://download.bbbike.org/osm/bbbike/Philadelphia/",
+  "retrieved": "2026-11-28",
+  "bounds_south_west_north_east": [
+    39.86,
+    -75.29,
+    40.14,
+    -74.93
+  ],
+  "elements": [
+    {
+      "type": "node",
+      "id": 1167170490,
+      "tags": {
+        "access": "yes",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.95527,
+      "longitude": -75.1823562
+    },
+    {
+      "type": "node",
+      "id": 1167196514,
+      "tags": {
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.878206,
+      "longitude": -75.2396059
+    },
+    {
+      "type": "node",
+      "id": 2358049323,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "name": "Flat Rock Park Boat Launch"
+      },
+      "latitude": 40.044608,
+      "longitude": -75.2538423
+    },
+    {
+      "type": "node",
+      "id": 2644271944,
+      "tags": {
+        "name": "Jefferson Station",
+        "toilets:access": "public"
+      },
+      "latitude": 39.9527752,
+      "longitude": -75.1580261
+    },
+    {
+      "type": "node",
+      "id": 2960067633,
+      "tags": {
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.876258,
+      "longitude": -75.2392
+    },
+    {
+      "type": "node",
+      "id": 2960067733,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.876154,
+      "longitude": -75.239025
+    },
+    {
+      "type": "node",
+      "id": 2960068633,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.876055,
+      "longitude": -75.238922
+    },
+    {
+      "type": "node",
+      "id": 3514945387,
+      "tags": {
+        "name": "Men's"
+      },
+      "latitude": 39.8747127,
+      "longitude": -75.2470391
+    },
+    {
+      "type": "node",
+      "id": 3514945391,
+      "tags": {
+        "name": "Men's"
+      },
+      "latitude": 39.8741415,
+      "longitude": -75.2469484
+    },
+    {
+      "type": "node",
+      "id": 3514950349,
+      "tags": {
+        "name": "Women's"
+      },
+      "latitude": 39.8746893,
+      "longitude": -75.2470561
+    },
+    {
+      "type": "node",
+      "id": 3514950351,
+      "tags": {
+        "name": "Women's"
+      },
+      "latitude": 39.8742305,
+      "longitude": -75.246916
+    },
+    {
+      "type": "node",
+      "id": 3666593286,
+      "tags": {},
+      "latitude": 39.9237886,
+      "longitude": -75.1284287
+    },
+    {
+      "type": "node",
+      "id": 3703125044,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.8942444,
+      "longitude": -75.1711388
+    },
+    {
+      "type": "node",
+      "id": 3703174520,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.8942189,
+      "longitude": -75.1714009
+    },
+    {
+      "type": "node",
+      "id": 3876322161,
+      "tags": {
+        "fee": "no"
+      },
+      "latitude": 39.875098,
+      "longitude": -75.2486888
+    },
+    {
+      "type": "node",
+      "id": 4007951816,
+      "tags": {},
+      "latitude": 40.0068184,
+      "longitude": -75.232052
+    },
+    {
+      "type": "node",
+      "id": 4294667975,
+      "tags": {
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.8805491,
+      "longitude": -75.238239
+    },
+    {
+      "type": "node",
+      "id": 4294668103,
+      "tags": {},
+      "latitude": 39.8809898,
+      "longitude": -75.2375003
+    },
+    {
+      "type": "node",
+      "id": 4294668110,
+      "tags": {},
+      "latitude": 39.8817357,
+      "longitude": -75.237257
+    },
+    {
+      "type": "node",
+      "id": 4751879121,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9689708,
+      "longitude": -75.1850964
+    },
+    {
+      "type": "node",
+      "id": 4881632722,
+      "tags": {},
+      "latitude": 39.9509589,
+      "longitude": -75.1499099
+    },
+    {
+      "type": "node",
+      "id": 5225369825,
+      "tags": {},
+      "latitude": 39.9501353,
+      "longitude": -75.0883388
+    },
+    {
+      "type": "node",
+      "id": 5967871740,
+      "tags": {},
+      "latitude": 39.8758542,
+      "longitude": -75.2445114
+    },
+    {
+      "type": "node",
+      "id": 5967871742,
+      "tags": {
+        "fee": "no"
+      },
+      "latitude": 39.8747579,
+      "longitude": -75.2502637
+    },
+    {
+      "type": "node",
+      "id": 5967871744,
+      "tags": {},
+      "latitude": 39.8746109,
+      "longitude": -75.2436025
+    },
+    {
+      "type": "node",
+      "id": 5967871754,
+      "tags": {},
+      "latitude": 39.8737574,
+      "longitude": -75.2515081
+    },
+    {
+      "type": "node",
+      "id": 6157764745,
+      "tags": {},
+      "latitude": 39.9738822,
+      "longitude": -75.1955342
+    },
+    {
+      "type": "node",
+      "id": 6157765085,
+      "tags": {},
+      "latitude": 39.9698074,
+      "longitude": -75.1957364
+    },
+    {
+      "type": "node",
+      "id": 6157765102,
+      "tags": {},
+      "latitude": 39.97126,
+      "longitude": -75.1964552
+    },
+    {
+      "type": "node",
+      "id": 6308830951,
+      "tags": {},
+      "latitude": 40.0288087,
+      "longitude": -75.012609
+    },
+    {
+      "type": "node",
+      "id": 6502481163,
+      "tags": {},
+      "latitude": 39.8998647,
+      "longitude": -75.0178906
+    },
+    {
+      "type": "node",
+      "id": 6621982900,
+      "tags": {},
+      "latitude": 39.9829705,
+      "longitude": -75.2102004
+    },
+    {
+      "type": "node",
+      "id": 7058328918,
+      "tags": {},
+      "latitude": 39.8860113,
+      "longitude": -75.002839
+    },
+    {
+      "type": "node",
+      "id": 7134774341,
+      "tags": {},
+      "latitude": 39.9921307,
+      "longitude": -75.2146644
+    },
+    {
+      "type": "node",
+      "id": 7140512475,
+      "tags": {},
+      "latitude": 39.9849184,
+      "longitude": -75.2195522
+    },
+    {
+      "type": "node",
+      "id": 7157264118,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.0312553,
+      "longitude": -75.1951873
+    },
+    {
+      "type": "node",
+      "id": 7157264162,
+      "tags": {},
+      "latitude": 40.0218026,
+      "longitude": -75.2034857
+    },
+    {
+      "type": "node",
+      "id": 7168061045,
+      "tags": {},
+      "latitude": 40.045823,
+      "longitude": -75.2158347
+    },
+    {
+      "type": "node",
+      "id": 7656771666,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.8923733,
+      "longitude": -75.2584369
+    },
+    {
+      "type": "node",
+      "id": 9099221109,
+      "tags": {},
+      "latitude": 39.8862431,
+      "longitude": -75.2626443
+    },
+    {
+      "type": "node",
+      "id": 9509147487,
+      "tags": {},
+      "latitude": 39.9440505,
+      "longitude": -75.1306627
+    },
+    {
+      "type": "node",
+      "id": 9630125332,
+      "tags": {},
+      "latitude": 39.9274324,
+      "longitude": -75.1518503
+    },
+    {
+      "type": "node",
+      "id": 9708211007,
+      "tags": {},
+      "latitude": 39.9141005,
+      "longitude": -75.1485884
+    },
+    {
+      "type": "node",
+      "id": 9970746284,
+      "tags": {},
+      "latitude": 39.9536653,
+      "longitude": -75.1586864
+    },
+    {
+      "type": "node",
+      "id": 10186235174,
+      "tags": {},
+      "latitude": 40.0227761,
+      "longitude": -75.2400678
+    },
+    {
+      "type": "node",
+      "id": 10186235175,
+      "tags": {},
+      "latitude": 40.0229091,
+      "longitude": -75.2397838
+    },
+    {
+      "type": "node",
+      "id": 10554560825,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "wheelchair": "designated"
+      },
+      "latitude": 39.8744663,
+      "longitude": -75.2413286
+    },
+    {
+      "type": "node",
+      "id": 10554560826,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "wheelchair": "designated"
+      },
+      "latitude": 39.874456,
+      "longitude": -75.2413943
+    },
+    {
+      "type": "node",
+      "id": 11293629669,
+      "tags": {},
+      "latitude": 40.0221986,
+      "longitude": -75.2031216
+    },
+    {
+      "type": "node",
+      "id": 11379798126,
+      "tags": {},
+      "latitude": 39.8778415,
+      "longitude": -75.2374424
+    },
+    {
+      "type": "node",
+      "id": 11379798128,
+      "tags": {},
+      "latitude": 39.8782141,
+      "longitude": -75.2379007
+    },
+    {
+      "type": "node",
+      "id": 11748268000,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "name": "John Heinz Refuge Canoe Launch"
+      },
+      "latitude": 39.8924735,
+      "longitude": -75.2587102
+    },
+    {
+      "type": "node",
+      "id": 11863209278,
+      "tags": {
+        "access": "permissive",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9531523,
+      "longitude": -75.1924135
+    },
+    {
+      "type": "node",
+      "id": 11879554767,
+      "tags": {},
+      "latitude": 39.9745419,
+      "longitude": -75.1959339
+    },
+    {
+      "type": "node",
+      "id": 11879554768,
+      "tags": {},
+      "latitude": 39.9745563,
+      "longitude": -75.1958696
+    },
+    {
+      "type": "node",
+      "id": 12177590965,
+      "tags": {
+        "access": "yes",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9061064,
+      "longitude": -75.0248112
+    },
+    {
+      "type": "node",
+      "id": 12178546775,
+      "tags": {},
+      "latitude": 39.8960235,
+      "longitude": -75.0141947
+    },
+    {
+      "type": "node",
+      "id": 12178560969,
+      "tags": {
+        "changing_table": "yes"
+      },
+      "latitude": 39.9274335,
+      "longitude": -75.0668296
+    },
+    {
+      "type": "node",
+      "id": 12202458321,
+      "tags": {},
+      "latitude": 39.9412282,
+      "longitude": -75.1312453
+    },
+    {
+      "type": "node",
+      "id": 12202458322,
+      "tags": {},
+      "latitude": 39.9412862,
+      "longitude": -75.1309905
+    },
+    {
+      "type": "node",
+      "id": 12544893847,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "opening_hours": "24/7",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9544292,
+      "longitude": -75.1647636
+    },
+    {
+      "type": "node",
+      "id": 12607456308,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.039376,
+      "longitude": -75.2684757
+    },
+    {
+      "type": "node",
+      "id": 12697444764,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.0135305,
+      "longitude": -75.2297452
+    },
+    {
+      "type": "node",
+      "id": 12954839430,
+      "tags": {},
+      "latitude": 39.9324344,
+      "longitude": -75.2122441
+    },
+    {
+      "type": "node",
+      "id": 12954839431,
+      "tags": {},
+      "latitude": 39.9321583,
+      "longitude": -75.2123299
+    },
+    {
+      "type": "node",
+      "id": 12960248681,
+      "tags": {},
+      "latitude": 40.0349,
+      "longitude": -75.2231927
+    },
+    {
+      "type": "node",
+      "id": 12960248682,
+      "tags": {},
+      "latitude": 40.0347283,
+      "longitude": -75.22357
+    },
+    {
+      "type": "node",
+      "id": 12960368387,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.9480628,
+      "longitude": -75.1833775
+    },
+    {
+      "type": "node",
+      "id": 12974276658,
+      "tags": {},
+      "latitude": 39.9941102,
+      "longitude": -75.2142135
+    },
+    {
+      "type": "node",
+      "id": 13112687851,
+      "tags": {
+        "fee": "no"
+      },
+      "latitude": 39.9524963,
+      "longitude": -75.1837014
+    },
+    {
+      "type": "node",
+      "id": 13114801745,
+      "tags": {
+        "access": "yes",
+        "fee": "no"
+      },
+      "latitude": 39.8754912,
+      "longitude": -75.2384001
+    },
+    {
+      "type": "node",
+      "id": 13431058345,
+      "tags": {},
+      "latitude": 40.0146601,
+      "longitude": -75.2088045
+    },
+    {
+      "type": "node",
+      "id": 13431058346,
+      "tags": {},
+      "latitude": 40.0146691,
+      "longitude": -75.2088389
+    },
+    {
+      "type": "node",
+      "id": 13542184025,
+      "tags": {
+        "access": "permissive",
+        "fee": "no",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9525314,
+      "longitude": -75.1397147
+    },
+    {
+      "type": "node",
+      "id": 13773191949,
+      "tags": {
+        "access": "yes",
+        "changing_table": "no",
+        "fee": "no",
+        "name": "Men's Room"
+      },
+      "latitude": 39.952372,
+      "longitude": -75.1682779
+    },
+    {
+      "type": "node",
+      "id": 13782350488,
+      "tags": {
+        "access": "yes",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9554505,
+      "longitude": -75.182312
+    },
+    {
+      "type": "node",
+      "id": 13806234352,
+      "tags": {
+        "access": "yes",
+        "changing_table": "yes",
+        "fee": "no",
+        "opening_hours": "24/7"
+      },
+      "latitude": 40.0054741,
+      "longitude": -75.2654167
+    },
+    {
+      "type": "node",
+      "id": 13815568456,
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "name": "Women's Room"
+      },
+      "latitude": 39.9523809,
+      "longitude": -75.1683562
+    },
+    {
+      "type": "node",
+      "id": 13986416898,
+      "tags": {
+        "access": "permissive",
+        "changing_table": "yes"
+      },
+      "latitude": 39.9552075,
+      "longitude": -75.1845867
+    },
+    {
+      "type": "node",
+      "id": 14307323012,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9845563,
+      "longitude": -75.2093096
+    },
+    {
+      "type": "way",
+      "id": 81168364,
+      "tags": {},
+      "latitude": 40.0442002,
+      "longitude": -75.2538395
+    },
+    {
+      "type": "way",
+      "id": 266455710,
+      "tags": {},
+      "latitude": 39.86858,
+      "longitude": -75.1896944
+    },
+    {
+      "type": "way",
+      "id": 320720162,
+      "tags": {
+        "fee": "no",
+        "name": "Schuylkill Banks Trailhead",
+        "wheelchair": "yes"
+      },
+      "latitude": 39.9511191,
+      "longitude": -75.1809903
+    },
+    {
+      "type": "way",
+      "id": 365373998,
+      "tags": {},
+      "latitude": 39.9555957,
+      "longitude": -75.1159289
+    },
+    {
+      "type": "way",
+      "id": 376424829,
+      "tags": {
+        "changing_table": "no",
+        "wheelchair": "limited"
+      },
+      "latitude": 40.0360523,
+      "longitude": -75.2015891
+    },
+    {
+      "type": "way",
+      "id": 454318177,
+      "tags": {
+        "addr:housenumber": "3500",
+        "addr:street": "South Broad Street",
+        "name": "FDR Rest Rooms"
+      },
+      "latitude": 39.8990104,
+      "longitude": -75.1813011
+    },
+    {
+      "type": "way",
+      "id": 544921901,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.998207,
+      "longitude": -75.2882907
+    },
+    {
+      "type": "way",
+      "id": 544921902,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.9982449,
+      "longitude": -75.2884123
+    },
+    {
+      "type": "way",
+      "id": 545159161,
+      "tags": {
+        "access": "yes",
+        "changing_table": "yes",
+        "fee": "no"
+      },
+      "latitude": 40.0135515,
+      "longitude": -75.2521174
+    },
+    {
+      "type": "way",
+      "id": 545761324,
+      "tags": {},
+      "latitude": 39.9865706,
+      "longitude": -75.2698277
+    },
+    {
+      "type": "way",
+      "id": 551768617,
+      "tags": {},
+      "latitude": 39.9864257,
+      "longitude": -75.2818496
+    },
+    {
+      "type": "way",
+      "id": 695843081,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.0137746,
+      "longitude": -75.2299162
+    },
+    {
+      "type": "way",
+      "id": 745721703,
+      "tags": {},
+      "latitude": 39.9903958,
+      "longitude": -74.9873821
+    },
+    {
+      "type": "way",
+      "id": 792359335,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.9827465,
+      "longitude": -75.0078043
+    },
+    {
+      "type": "way",
+      "id": 984093333,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.8862383,
+      "longitude": -75.2626514
+    },
+    {
+      "type": "way",
+      "id": 985817509,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.002452,
+      "longitude": -75.2299096
+    },
+    {
+      "type": "way",
+      "id": 1025932225,
+      "tags": {
+        "access": "yes"
+      },
+      "latitude": 39.9674667,
+      "longitude": -74.9555636
+    },
+    {
+      "type": "way",
+      "id": 1165063422,
+      "tags": {
+        "wheelchair": "yes"
+      },
+      "latitude": 40.0138271,
+      "longitude": -75.2299168
+    },
+    {
+      "type": "way",
+      "id": 1223482119,
+      "tags": {},
+      "latitude": 39.9104057,
+      "longitude": -75.036503
+    },
+    {
+      "type": "way",
+      "id": 1314900397,
+      "tags": {},
+      "latitude": 40.0238845,
+      "longitude": -75.2390278
+    },
+    {
+      "type": "way",
+      "id": 1540057084,
+      "tags": {},
+      "latitude": 39.9874173,
+      "longitude": -75.0248138
+    }
+  ]
+}

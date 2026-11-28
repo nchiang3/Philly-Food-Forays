@@ -7,6 +7,7 @@ from base64 import b64encode
 from datetime import time
 from html import escape
 from pathlib import Path
+from urllib.parse import urlencode
 
 import pydeck as pdk
 import streamlit as st
@@ -39,6 +40,7 @@ from food_tour.chains import (  # noqa: E402
 from food_tour.food_matching import FOOD_ALIASES  # noqa: E402
 from food_tour.hours import WEEKDAYS  # noqa: E402
 from food_tour.ranking import HOURS_JSON_COLUMN, rank_restaurants  # noqa: E402
+from food_tour.restrooms import RESTROOM_RADIUS_MILES, nearby_restrooms  # noqa: E402
 from food_tour.route import (  # noqa: E402
     CUMULATIVE_COLUMN,
     GOOGLE_MAPS_MAX_POINTS,
@@ -166,7 +168,8 @@ def show_tour_map(
     start: tuple[float, float] | None,
     start_label: str,
     path: list[list[float]],
-) -> None:
+    restrooms: list[dict],
+) -> dict | None:
     """Draw the numbered route on a key-free map, with Google Maps links."""
     markers = [
         {**marker, "color": START_COLOR if marker["is_start"] else ROUTE_COLOR}
@@ -175,6 +178,7 @@ def show_tour_map(
     view = map_view(
         [(row["latitude"], row["longitude"]) for row in markers]
         + [(latitude, longitude) for longitude, latitude in path]
+        + [(row["latitude"], row["longitude"]) for row in restrooms]
     )
     layers = [
         pdk.Layer(
@@ -186,6 +190,7 @@ def show_tour_map(
         ),
         pdk.Layer(
             "ScatterplotLayer",
+            id="tour-stops",
             data=markers,
             get_position=["longitude", "latitude"],
             get_fill_color="color",
@@ -207,14 +212,47 @@ def show_tour_map(
             get_alignment_baseline=pdk.types.String("center"),
         ),
     ]
-    st.pydeck_chart(
+    if restrooms:
+        pin = b64encode((APP_DIR / "assets" / "restroom-pin.png").read_bytes()).decode("ascii")
+        icon = {
+            "url": f"data:image/png;base64,{pin}",
+            "width": 64,
+            "height": 72,
+            "anchorY": 69,
+        }
+        layers.append(
+            pdk.Layer(
+                "IconLayer",
+                id="public-restrooms",
+                data=[
+                    {
+                        **restroom,
+                        **{field: escape(restroom[field]) for field in ("title", "address", "leg")},
+                        "icon": icon,
+                    }
+                    for restroom in restrooms
+                ],
+                get_icon="icon",
+                get_position=["longitude", "latitude"],
+                get_size=24,
+                # PyDeck treats bare strings as data accessors.
+                size_units=pdk.types.String("pixels"),
+                size_max_pixels=24,
+                pickable=True,
+            )
+        )
+
+    event = st.pydeck_chart(
         pdk.Deck(
             layers=layers,
             initial_view_state=pdk.ViewState(**view),
             map_provider="carto",
             map_style=CARTO_VOYAGER_STYLE,
             tooltip={"html": "<b>{title}</b><br/>{address}<br/>{leg}"},
-        )
+        ),
+        key="tour_map",
+        on_select="rerun" if restrooms else "ignore",
+        alt="Walking tour map with numbered food stops and optional public restroom pins",
     )
 
     links = google_maps_walking_urls(route_rows, start)
@@ -231,6 +269,35 @@ def show_tour_map(
             f"so the route is split into {len(links)} links. Each part starts "
             f"where the previous one ended."
         )
+
+    if restrooms:
+        selected = event["selection"]["objects"].get("public-restrooms", [])
+        if selected:
+            return next((row for row in restrooms if row["id"] == selected[0]["id"]), None)
+    return None
+
+
+def show_restroom_details(restroom: dict) -> None:
+    with st.container(border=True, key="restroom-details"):
+        st.text(restroom["title"])
+        if restroom["address"]:
+            st.text(restroom["address"])
+        st.text(restroom["leg"])
+        st.text(
+            f"Posted hours: {restroom['hours']}\n"
+            f"Access: {restroom['accessibility']}\n"
+            f"Fee: {restroom['fee']}"
+        )
+        query = urlencode({
+            "api": 1,
+            "destination": f"{restroom['latitude']},{restroom['longitude']}",
+            "travelmode": "walking",
+        })
+        st.link_button("Walking directions", f"https://www.google.com/maps/dir/?{query}")
+        source_label = restroom.get("source_label", "Check hours and entrance details")
+        st.markdown(f"[{source_label}]({restroom['source']})")
+
+
 st.set_page_config(
     page_title="Philly Food Forays",
     page_icon="🥨",
@@ -550,6 +617,9 @@ if filtered and active_step in (2, 3):
 
 if active_step == 2:
     with content:
+        show_restrooms = st.toggle(
+            "Show public restrooms", value=True, key="show_public_restrooms"
+        )
         if not filtered:
             st.info("No restaurants match your filters. Select Edit filters to adjust your search.")
         elif not route_rows:
@@ -564,10 +634,24 @@ if active_step == 2:
             else:
                 st.metric("Total walk (straight line)", f"{total_miles:.2f} mi")
                 path = route_path(route_rows, route_start)
+            restrooms = nearby_restrooms(path) if show_restrooms else []
+            if restrooms:
+                st.caption(
+                    f"{len(restrooms)} nearby restroom listings. Select a light-green toilet pin for details. "
+                    "Community-mapped listings © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)."
+                )
+            elif show_restrooms:
+                st.caption(
+                    f"No listed public restrooms within {RESTROOM_RADIUS_MILES:g} mi of this route."
+                )
             map_panel, stops_panel = st.columns([3, 1], gap="medium")
             with map_panel:
-                show_tour_map(route_rows, route_start, route_start_label, path)
+                selected_restroom = show_tour_map(
+                    route_rows, route_start, route_start_label, path, restrooms
+                )
             with stops_panel:
+                if selected_restroom:
+                    show_restroom_details(selected_restroom)
                 st.subheader("Stops")
                 for row in route_rows:
                     st.text(f"{row[order_column]}. {row['name']}")
