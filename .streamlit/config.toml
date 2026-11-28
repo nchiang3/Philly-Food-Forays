@@ -2,3 +2,14 @@
 maxUploadSize = 650
 maxMessageSize = 650
 
+[theme]
+base = "light"
+primaryColor = "#A62336"
+backgroundColor = "#FFF8EE"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#302021"
+borderColor = "#E7D4CD"
+showWidgetBorder = true
+baseRadius = "medium"
+buttonRadius = "medium"
+
