@@ -71,7 +71,7 @@
 
 .st-key-tour-step-bar [data-testid="stHorizontalBlock"] {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .st-key-tour-step-bar [data-testid="stColumn"] {
@@ -154,6 +154,366 @@
     display: block;
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+/* Model explained step */
+.mx-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.mx-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #e7d4cd;
+    border-top: 0.25rem solid #a62336;
+    border-radius: 0.8rem;
+    background: #fff;
+}
+
+.mx-tile strong {
+    color: #851d2e;
+    font-family: Georgia, serif;
+    font-size: 1.45rem;
+    line-height: 1.15;
+}
+
+.mx-tile span,
+.mx-muted {
+    color: #6b5554;
+    font-size: 0.88rem;
+}
+
+.mx-card {
+    padding: 1.1rem 1.3rem;
+    border: 1px solid #e7d4cd;
+    border-radius: 0.8rem;
+    background: #fff;
+    color: #302021;
+    line-height: 1.55;
+}
+
+.mx-card h3 {
+    margin: 0 0 0.6rem;
+    padding: 0;
+    color: #851d2e;
+    font-family: Georgia, serif;
+    font-size: 1.45rem;
+}
+
+.mx-card h4 {
+    margin: 0.4rem 0 0.4rem;
+    padding: 0;
+    color: #204c78;
+    font-size: 1rem;
+}
+
+.mx-card ul {
+    margin: 0 0 0.6rem;
+    padding-left: 1.2rem;
+}
+
+.mx-card li + li {
+    margin-top: 0.3rem;
+}
+
+.mx-card code {
+    padding: 0.05rem 0.3rem;
+    border-radius: 0.25rem;
+    background: #f5ede8;
+    font-size: 0.85em;
+}
+
+.mx-source {
+    border-left: 0.35rem solid #a62336;
+}
+
+.mx-citation {
+    margin: 0 0 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 0.5rem;
+    background: #fff8ee;
+    font-family: Georgia, serif;
+}
+
+.mx-citation a {
+    color: #204c78;
+}
+
+.mx-facts {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+}
+
+.mx-facts > div {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.mx-facts dt {
+    color: #851d2e;
+    font-weight: 600;
+}
+
+.mx-facts dd {
+    margin: 0;
+}
+
+.mx-pipeline {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+}
+
+.mx-pipeline li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0.8rem;
+    border: 1px solid #bdd1e5;
+    border-radius: 0.6rem;
+    background: #edf5fc;
+    font-size: 0.86rem;
+}
+
+.mx-pipeline li + li {
+    margin-top: 0;
+}
+
+.mx-pipeline li:not(:last-child)::after {
+    content: "›";
+    position: absolute;
+    top: 50%;
+    right: -0.55rem;
+    z-index: 1;
+    color: #487eb1;
+    font-size: 1.3rem;
+    font-weight: 700;
+    transform: translateY(-50%);
+}
+
+.mx-pipeline strong {
+    color: #204c78;
+    font-size: 0.95rem;
+}
+
+.mx-step-number {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: #2c629b;
+    color: #fff;
+    font-weight: 700;
+}
+
+.mx-two-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.mx-terms {
+    gap: 0.75rem;
+}
+
+.mx-weights {
+    display: flex;
+    overflow: hidden;
+    margin-top: 0.4rem;
+    border-radius: 0.5rem;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.mx-weights span {
+    padding: 0.55rem 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mx-seg-sentiment {
+    background: #a62336;
+}
+
+.mx-seg-food-volume {
+    background: #2c629b;
+}
+
+.mx-seg-overall-volume {
+    background: #9a6a1e;
+}
+
+.st-key-model-formula {
+    padding: 0.6rem 0.4rem;
+    border: 1px solid #e7d4cd;
+    border-radius: 0.8rem;
+    background: #fff;
+    overflow-x: auto;
+}
+
+.mx-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0.3rem 0 0.8rem;
+    font-size: 0.85rem;
+}
+
+.mx-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mx-legend i {
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 0.2rem;
+}
+
+.mx-bars {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mx-bars li {
+    display: grid;
+    grid-template-columns: minmax(8rem, 15rem) minmax(0, 1fr) 3rem;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.mx-bar-name {
+    overflow: hidden;
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mx-bar {
+    display: flex;
+    height: 1.1rem;
+    overflow: hidden;
+    border-radius: 0.3rem;
+    background: #f3ebe6;
+}
+
+.mx-bar span + span {
+    border-left: 2px solid #fff;
+}
+
+.mx-bar-score {
+    color: #851d2e;
+    font-weight: 700;
+    text-align: right;
+}
+
+.mx-decisions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 0.75rem;
+}
+
+.mx-decision {
+    padding: 0.9rem 1rem;
+    border: 1px solid #e9cdbb;
+    border-radius: 0.6rem;
+    background: #fffaf5;
+    font-size: 0.9rem;
+}
+
+.mx-decision h4 {
+    margin-top: 0;
+    color: #851d2e;
+}
+
+.mx-decision p {
+    margin: 0 0 0.45rem;
+}
+
+.mx-tag {
+    display: inline-block;
+    min-width: 4.6rem;
+    margin-right: 0.45rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.3rem;
+    background: #e7f1fa;
+    color: #204c78;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.mx-tag-why {
+    background: #edf8ef;
+    color: #2d6a3e;
+}
+
+.mx-tag-tradeoff {
+    background: #fbeaea;
+    color: #8a2432;
+}
+
+.mx-limits {
+    background: #fff1e6;
+    border-color: #e9cdbb;
+}
+
+@media (max-width: 1100px) {
+    .mx-pipeline {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .mx-pipeline li:nth-child(3)::after {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .mx-tiles,
+    .mx-two-column {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mx-two-column {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mx-pipeline {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mx-pipeline li::after {
+        display: none;
+    }
+
+    .mx-facts > div,
+    .mx-bars li {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.2rem;
+    }
 }
 
 @media (min-width: 901px) {

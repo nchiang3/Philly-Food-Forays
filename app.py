@@ -68,6 +68,7 @@ from food_tour.stop_details import (  # noqa: E402
     weekly_hours,
     why_picked,
 )
+from food_tour import model_explained  # noqa: E402
 from food_tour.walking import WalkingRoute, fetch_walking_route  # noqa: E402
 from food_tour.schedule import (  # noqa: E402
     ARRIVAL_COLUMN,
@@ -91,10 +92,12 @@ STEP_LABELS = (
     "2. Preview the map",
     "3. Stop details",
     "4. Details & stats",
+    "5. Model explained",
 )
 LAST_STEP = len(STEP_LABELS) - 1
 STOP_DETAILS_STEP = 3
 STATS_STEP = 4
+MODEL_STEP = 5
 CLOSE_TOGETHER = "Close to each other"
 NEAR_START = "Close to a starting point"
 
@@ -456,6 +459,49 @@ def show_stop_details(
                 )
 
 
+def show_model_explained(
+    ranked: list[dict],
+    tour_stops: list[dict],
+    food: str,
+    restaurant_count: int,
+    food_sentiment: list[dict],
+) -> None:
+    """Data source, model, score formula, and design decisions."""
+    st.header("5. Model explained")
+    st.caption(
+        "How Philly Food Forays turns Yelp reviews into a walking tour, written "
+        "for readers comfortable with basic statistics and machine learning."
+    )
+    food_mentions = sum(int(row["matched_reviews"]) for row in food_sentiment)
+    st.html(model_explained.glance_html(restaurant_count, len(food_sentiment), food_mentions))
+    st.html(model_explained.data_source_html())
+    with st.expander("Cite the dataset (BibTeX)"):
+        st.code(model_explained.BIBTEX, language="latex")
+    st.html(model_explained.pipeline_html())
+    st.html(model_explained.sentiment_html())
+    st.html(model_explained.ranking_intro_html())
+    with st.container(key="model-formula"):
+        st.latex(model_explained.SCORE_LATEX)
+    st.html(
+        model_explained.ranking_terms_html(
+            model_explained.prior_positive_share(ranked), food
+        )
+    )
+    tour_ids = {row["business_id"] for row in tour_stops}
+    st.html(
+        model_explained.breakdown_html(
+            [
+                item
+                for item in model_explained.score_components(ranked)
+                if item["business_id"] in tour_ids
+            ],
+            food,
+        )
+    )
+    st.html(model_explained.decisions_html())
+    st.html(model_explained.limitations_html())
+
+
 st.set_page_config(
     page_title="Philly Food Forays",
     page_icon="🥨",
@@ -500,7 +546,13 @@ with st.container(key="tour-page-layout"):
     left_rail, content, right_rail = st.columns([1, 8, 1], gap="small")
     if active_step > 0:
         left_rail.button(
-            ("← Instructions", "← Edit filters", "← Back to map", "← Stop details")[
+            (
+                "← Instructions",
+                "← Edit filters",
+                "← Back to map",
+                "← Stop details",
+                "← Details & stats",
+            )[
                 active_step - 1
             ],
             key="previous_step",
@@ -510,7 +562,13 @@ with st.container(key="tour-page-layout"):
         )
     if active_step < LAST_STEP:
         right_rail.button(
-            ("Start planning →", "View map →", "Stop details →", "Details & stats →")[
+            (
+                "Start planning →",
+                "View map →",
+                "Stop details →",
+                "Details & stats →",
+                "Model explained →",
+            )[
                 active_step
             ],
             key="next_step",
@@ -542,7 +600,9 @@ with content, st.container(key="instructions-panel"):
         "2. **Preview the map.** Explore the walking route and return to the planner to adjust it.\n"
         "3. **Stop details.** See each numbered stop's address, hours, why it was picked, "
         "and any timing conflicts with your plan.\n"
-        "4. **Details & stats.** Browse restaurant rankings, the itinerary, and review data."
+        "4. **Details & stats.** Browse restaurant rankings, the itinerary, and review data.\n"
+        "5. **Model explained.** See the data source and date, how stops are scored, and why "
+        "each tour rule was chosen."
     )
     st.markdown("**Upload the restaurant and food sentiment CSVs to start.**")
     st.caption("Your uploaded files are used only for the active Streamlit session.")
@@ -1019,3 +1079,13 @@ if active_step == STATS_STEP:
                 review_c.metric("Uploaded size", f"{review_upload.size / 1_000_000:.1f} MB")
                 st.write("Review star distribution", summary["star_counts"])
                 st.dataframe(summary["sample"], width="stretch", hide_index=True)
+
+if active_step == MODEL_STEP:
+    with content:
+        show_model_explained(
+            ranked,
+            tour_stops,
+            selected_food,
+            len(restaurants),
+            food_sentiment,
+        )
