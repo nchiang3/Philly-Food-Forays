@@ -337,6 +337,40 @@ sentence. Unit tests in `tests/test_stop_details.py` and
 visit plan, each timing note, the "why" reasons, review collection, themes,
 quote selection, and empty inputs.
 
+## Model explained
+
+The "5. Model explained" step, after "4. Details & stats", explains the
+project to a data-science audience. `src/food_tour/model_explained.py` builds
+its content:
+
+- **Data source and date.** A citation for the Yelp Open Dataset (with a
+  BibTeX entry) and its effective date. The date was measured, not assumed:
+  scanning every review's `date` field in the team's copy shows reviews from
+  2005-02-16 to 2022-01-19 (6,990,280 reviews in total, 708,284 for the
+  6,159 Philadelphia food businesses), and the JSON files in
+  `yelp_dataset.tar` are timestamped 2022-01-19. Hours, open flags, stars,
+  and review counts describe businesses as of that snapshot.
+- **Pipeline.** Six steps from raw Yelp JSON to a walking tour.
+- **Sentiment model.** Labels, sampling, features, classifier, accuracy, why
+  it was chosen, and its caveats (noisy star labels, review-to-sentence
+  domain shift, the hard neutral class).
+- **Recommendation score.** The formula rendered in LaTeX, with weights and
+  the prior strength read from `ranking.py` so the page cannot drift from the
+  model, an explanation of the shrinkage and log-volume terms, and the
+  alternatives considered.
+- **Live score breakdown.** Stacked bars split each current tour stop's
+  score into its sentiment, food-volume, and overall-volume points.
+- **Design decisions.** What, why, and trade-off cards for food matching,
+  the distance filter versus K-means, greedy "close to each other" selection,
+  the fewer-stops warning, opening-hours ordering, the walking order, chain
+  consolidation, API-free review highlights, and the free map and restroom
+  data.
+- **Limitations and next steps.**
+
+Unit tests in `tests/test_model_explained.py` check that the score parts add
+up to each score, the pooled prior, the citation and date, that weights come
+from the ranking module, and HTML escaping.
+
 ## Planned next features
 
 - Geographic clustering of suitable restaurants

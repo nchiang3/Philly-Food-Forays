@@ -25,6 +25,7 @@ Our goal is to use machine learning to identify restaurants with positive custom
 | `src/food_tour/walking.py` | Fetches street walking routes, distances, and times from the free FOSSGIS OSRM server, with a straight-line fallback. |
 | `src/food_tour/stop_details.py` | Builds each tour stop's full address, weekly hours, "why this stop" reasons, and opening-hours notes for the Stop details step. |
 | `src/food_tour/review_highlights.py` | Streams the optional review JSONL for the tour's stops and summarizes what reviewers say about the food, without an API. |
+| `src/food_tour/model_explained.py` | Content and live score breakdowns for the Model explained step: data citation and date, model, score formula, and design decisions. |
 | `tests/` | Automated tests for preprocessing, uploads, food matching, and ranking. |
 | `docs/PROJECT_FEATURES.md` | Detailed summary of application features, models, and current limitations. |
 | `docs/TEAM_GIT_WORKFLOW.md` | Team instructions for setup, branches, pull requests, merging, and local updates. |
