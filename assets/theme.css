@@ -107,6 +107,16 @@
     border-color: #bdd1e5;
 }
 
+.st-key-restroom-details {
+    background: #edf8ef;
+    border-color: #a9cdb2;
+}
+
+.st-key-restroom-details [data-testid="stText"] {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 .restaurant-preview {
     width: 100%;
     border-collapse: collapse;
