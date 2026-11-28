@@ -88,6 +88,8 @@ def rank_restaurants(
         )
 
         result = {
+            # Hidden in the app; links a stop back to its reviews and details.
+            "business_id": restaurant["business_id"],
             "name": restaurant["name"],
             "address": restaurant["address"],
             "opening hours": format_weekly_hours(restaurant.get("hours_json")),

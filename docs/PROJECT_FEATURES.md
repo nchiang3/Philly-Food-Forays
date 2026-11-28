@@ -293,6 +293,50 @@ access, to cover the request URL and User-Agent, parsing legs and the route
 line, rejecting bad or mismatched answers, the offline fallback, and street
 legs and minutes in the table and tooltips.
 
+## Stop details
+
+The "3. Stop details" step (between the map and "4. Details & stats") gives
+one card per tour stop. Cards are numbered exactly like the map markers, and
+stops that don't fit the visit window follow at the end, marked "not on the
+map". `src/food_tour/stop_details.py` builds the content:
+
+- **Address and hours.** The street address with city, state, and ZIP, a
+  key-free Google Maps search link that opens the place's card, and all seven
+  days of Yelp hours, with the visit day in bold.
+- **Why this stop.** Plain-language reasons from the ranking: the stop's rank
+  among all matches and its score, how many reviews mention the food and the
+  share that read as positive, its overall Yelp stars, whether it leads the
+  tour in food reviews or positivity, and chain and distance notes.
+- **Timing notes.** With a visit window, the app replays the visit plan to
+  get each stop's arrival and closing time, then calls out:
+  - Warnings when a stop isn't open during its planned tour time: it closes
+    before the tour can reach it, the other stops fill the window first, or
+    it closes sooner than the planned minutes per stop. A warning also flags
+    businesses Yelp marks as closed for good.
+  - Info notes when a stop is closed when the tour starts (with its real
+    opening time, explaining why it comes later in the route), when the tour
+    waits for it to open, or when the stay runs past the end of the window.
+  - Without a visit window, the days the stop is closed, or that Yelp has no
+    hours for it.
+  The step also repeats the "doesn't fit the window" and fewer-stops warnings.
+- **What reviewers say.** When the optional review JSONL is uploaded, a
+  "Summarize reviews for these stops" button streams the file once (other
+  businesses' lines are skipped with a quick text check) and keeps only the
+  sentences that mention the selected food, up to the 1,500 most recent per
+  stop. `src/food_tour/review_highlights.py` then shows the words reviewers
+  use most often with the food (counted once per review, ignoring common words
+  and the food's own name) and quotes up to three 4-5 star sentences and one
+  1-2 star sentence. Quotes are the sentences that best match those common
+  words, favoring reviews other users voted useful and skipping near-duplicates.
+  Results are kept for the session, so revisiting the step is instant.
+
+The summaries are extractive rather than written by a large language model,
+so they need no API key or paid service and every quote is a real review
+sentence. Unit tests in `tests/test_stop_details.py` and
+`tests/test_review_highlights.py` cover the address and map link, the replayed
+visit plan, each timing note, the "why" reasons, review collection, themes,
+quote selection, and empty inputs.
+
 ## Planned next features
 
 - Geographic clustering of suitable restaurants

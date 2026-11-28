@@ -55,6 +55,19 @@ from food_tour.route import (  # noqa: E402
     route_path,
     route_points,
 )
+from food_tour.review_highlights import (  # noqa: E402
+    collect_food_reviews,
+    summarize_food_reviews,
+)
+from food_tour.stop_details import (  # noqa: E402
+    WARNING,
+    full_address,
+    google_maps_place_url,
+    planned_visits,
+    timing_notes,
+    weekly_hours,
+    why_picked,
+)
 from food_tour.walking import WalkingRoute, fetch_walking_route  # noqa: E402
 from food_tour.schedule import (  # noqa: E402
     ARRIVAL_COLUMN,
@@ -76,8 +89,12 @@ STEP_LABELS = (
     "Instructions",
     "1. Plan your tour",
     "2. Preview the map",
-    "3. Details & stats",
+    "3. Stop details",
+    "4. Details & stats",
 )
+LAST_STEP = len(STEP_LABELS) - 1
+STOP_DETAILS_STEP = 3
+STATS_STEP = 4
 CLOSE_TOGETHER = "Close to each other"
 NEAR_START = "Close to a starting point"
 
@@ -298,6 +315,147 @@ def show_restroom_details(restroom: dict) -> None:
         st.markdown(f"[{source_label}]({restroom['source']})")
 
 
+def load_review_highlights(review_file, business_ids: list[str], food: str) -> None:
+    """Stream the review file for stops not yet summarized this session."""
+    cache = st.session_state.setdefault("review_highlights", {})
+    missing = [
+        business_id
+        for business_id in business_ids
+        if (review_file.file_id, food, business_id) not in cache
+    ]
+    if not missing:
+        return
+    with st.spinner(
+        "Reading the review file for these stops (this can take a minute)..."
+    ):
+        found = collect_food_reviews(review_file, missing, food)
+    for business_id, reviews in found.items():
+        cache[(review_file.file_id, food, business_id)] = summarize_food_reviews(
+            reviews, food
+        )
+
+
+def cached_review_highlights(review_file, business_id: str, food: str):
+    if review_file is None:
+        return None
+    return st.session_state.get("review_highlights", {}).get(
+        (review_file.file_id, food, business_id)
+    )
+
+
+def show_review_highlights(summary, food: str) -> None:
+    """Common words and representative quotes about the food, if loaded."""
+    if summary is None:
+        return
+    st.markdown("**What reviewers say**")
+    if not summary["review_count"]:
+        st.caption(f"No reviews in the uploaded file mention its {food}.")
+        return
+    share = summary["positive_share"] or 0
+    lines = [
+        f"From {summary['review_count']:,} reviews that mention its {food} "
+        f"({share:.0%} gave 4-5 stars)."
+    ]
+    if summary["themes"]:
+        themes = ", ".join(
+            f"*{word}* ({count:,})" for word, count in summary["themes"]
+        )
+        lines.append(f"Words reviewers use most often with it: {themes}.")
+    st.markdown("  \n".join(lines))
+    for icon, quotes in (("👍", summary["praise"]), ("👎", summary["critiques"])):
+        for quote in quotes:
+            st.markdown(
+                f"> {icon} “{quote['text']}” "
+                f"({quote['stars']:.0f}★, {quote['date']})"
+            )
+
+
+def show_stop_details(
+    route_rows: list[dict],
+    skipped: list[dict],
+    rank_by_id: dict[str, int],
+    total_matches: int,
+    food: str,
+    restaurants_by_id: dict[str, dict],
+    planned_window: tuple | None,
+    distance_start_label: str | None,
+    review_file,
+) -> None:
+    """One card per stop, numbered like the map, then stops left off the map."""
+    tour = route_rows + skipped
+    if planned_window is not None:
+        weekday, window_start, window_end, minutes = planned_window
+        visits = planned_visits(route_rows, weekday, window_start, window_end, minutes)
+    else:
+        weekday = window_start = window_end = minutes = None
+        visits = [None] * len(route_rows)
+
+    st.caption(
+        "Each card's number matches its marker on the map. Why each stop was "
+        "picked comes from its ranking scores; hours and addresses come from "
+        "the Yelp Open Dataset snapshot, so check before you go."
+    )
+    if review_file is None:
+        st.info(
+            "Upload the optional review JSONL on the Instructions step to see "
+            f"what reviewers say about each stop's {food}."
+        )
+    elif st.button("Summarize reviews for these stops", type="primary"):
+        load_review_highlights(review_file, [row["business_id"] for row in tour], food)
+
+    cards = [
+        (position, row, visit, True)
+        for position, (row, visit) in enumerate(zip(route_rows, visits), start=1)
+    ]
+    cards += [(None, row, None, False) for row in skipped]
+    for position, row, visit, scheduled in cards:
+        restaurant = restaurants_by_id.get(row["business_id"], {})
+        address = full_address(row, restaurant)
+        with st.container(border=True):
+            heading = (
+                f"{position}. {row['name']}"
+                if scheduled
+                else f"{row['name']} (not on the map)"
+            )
+            st.markdown(f"#### {heading}")
+            info_column, why_column = st.columns([2, 3], gap="large")
+            with info_column:
+                st.markdown(f"📍 {address or 'Address unavailable'}")
+                st.link_button("Open in Google Maps", google_maps_place_url(row, address))
+                hours_lines = [
+                    f"**{day}: {hours}**" if day == weekday else f"{day}: {hours}"
+                    for day, hours in weekly_hours(row.get(HOURS_JSON_COLUMN))
+                ]
+                st.markdown("**Hours**  \n" + "  \n".join(hours_lines))
+            with why_column:
+                for note in timing_notes(
+                    row,
+                    visit,
+                    scheduled=scheduled,
+                    position=position or 0,
+                    weekday=weekday,
+                    start_time=window_start,
+                    end_time=window_end,
+                    minutes_per_stop=minutes,
+                    restaurant=restaurant,
+                ):
+                    (st.warning if note.level == WARNING else st.info)(note.text)
+                st.markdown("**Why this stop**")
+                reasons = why_picked(
+                    row,
+                    rank_by_id.get(row["business_id"], 0),
+                    total_matches,
+                    food,
+                    tour,
+                    distance_start_label,
+                )
+                st.markdown("\n".join(f"- {reason}" for reason in reasons))
+                show_review_highlights(
+                    cached_review_highlights(review_file, row["business_id"], food),
+                    food,
+                )
+
+
 st.set_page_config(
     page_title="Philly Food Forays",
     page_icon="🥨",
@@ -320,7 +478,7 @@ active_step = st.session_state.get("active_step", 0) if ready else 0
 st.session_state["active_step"] = active_step
 
 with st.container(key="tour-step-bar"):
-    for step, column in enumerate(st.columns(4, gap="small")):
+    for step, column in enumerate(st.columns(len(STEP_LABELS), gap="small")):
         column.button(
             STEP_LABELS[step],
             key=f"step_{step}",
@@ -342,15 +500,19 @@ with st.container(key="tour-page-layout"):
     left_rail, content, right_rail = st.columns([1, 8, 1], gap="small")
     if active_step > 0:
         left_rail.button(
-            ("← Instructions", "← Edit filters", "← Back to map")[active_step - 1],
+            ("← Instructions", "← Edit filters", "← Back to map", "← Stop details")[
+                active_step - 1
+            ],
             key="previous_step",
             width="stretch",
             on_click=change_step,
             args=(active_step - 1,),
         )
-    if active_step < 3:
+    if active_step < LAST_STEP:
         right_rail.button(
-            ("Start planning →", "View map →", "View details →")[active_step],
+            ("Start planning →", "View map →", "Stop details →", "Details & stats →")[
+                active_step
+            ],
             key="next_step",
             width="stretch",
             type="primary",
@@ -378,7 +540,9 @@ with content, st.container(key="instructions-panel"):
     st.markdown(
         "1. **Plan your tour.** Pick a Philly food and set your visit, distance, and stop preferences.\n"
         "2. **Preview the map.** Explore the walking route and return to the planner to adjust it.\n"
-        "3. **Details & stats.** Browse restaurant rankings, the itinerary, and review data."
+        "3. **Stop details.** See each numbered stop's address, hours, why it was picked, "
+        "and any timing conflicts with your plan.\n"
+        "4. **Details & stats.** Browse restaurant rankings, the itinerary, and review data."
     )
     st.markdown("**Upload the restaurant and food sentiment CSVs to start.**")
     st.caption("Your uploaded files are used only for the active Streamlit session.")
@@ -564,7 +728,8 @@ if active_step == 1:
             st.info("No restaurants match your filters.")
 
 route_rows = []
-if filtered and active_step in (2, 3):
+skipped = []
+if filtered and active_step >= 2:
     route_start = None
     route_start_label = ""
     if (
@@ -673,9 +838,43 @@ if active_step == 2:
                     "directions."
                 )
 
-if active_step == 3:
+if active_step == STOP_DETAILS_STEP:
     with content:
-        st.header("3. Details & stats")
+        st.header("3. Stop details")
+        if not filtered:
+            st.info("No restaurants match your filters. Select Edit filters to adjust your search.")
+        else:
+            if filter_by_visit:
+                unscheduled = unscheduled_message(plan)
+                if unscheduled:
+                    st.warning(unscheduled)
+            if filter_by_distance and distance_mode == CLOSE_TOGETHER:
+                shortfall = stop_shortfall_message(max_stops, len(filtered))
+                if shortfall:
+                    st.warning(shortfall)
+            show_stop_details(
+                route_rows,
+                skipped,
+                {row["business_id"]: rank for rank, row in enumerate(filtered, start=1)},
+                len(filtered),
+                selected_food,
+                {row["business_id"]: row for row in restaurants},
+                (
+                    (visit_day, visit_start_time, visit_end_time, minutes_per_stop)
+                    if filter_by_visit
+                    else None
+                ),
+                (
+                    ("the top-ranked restaurant" if start_name == TOP_RANKED_START else start_name)
+                    if filter_by_distance and distance_mode == NEAR_START
+                    else None
+                ),
+                review_upload,
+            )
+
+if active_step == STATS_STEP:
+    with content:
+        st.header("4. Details & stats")
         open_count = sum(row.get("is_open") == "1" for row in restaurants)
         metric_a, metric_b, metric_c = st.columns(3)
         metric_a.metric("Restaurants", f"{len(restaurants):,}")
@@ -740,6 +939,7 @@ if active_step == 3:
                 "food review stars": st.column_config.NumberColumn(format="%.2f"),
                 DISTANCE_COLUMN: st.column_config.NumberColumn(format="%.2f mi"),
                 HOURS_JSON_COLUMN: None,
+                "business_id": None,
             },
         )
         st.caption(
