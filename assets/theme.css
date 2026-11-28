@@ -69,6 +69,117 @@
     color: #851d2e;
 }
 
+.st-key-tour-step-bar [data-testid="stHorizontalBlock"] {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.st-key-tour-step-bar [data-testid="stColumn"] {
+    width: 100%;
+    min-width: 0;
+}
+
+.st-key-tour-step-bar button {
+    min-height: 3.2rem;
+}
+
+.st-key-tour-step-bar button:not(:disabled)[kind="secondary"],
+.st-key-previous_step button:not(:disabled) {
+    color: #204c78;
+    border-color: #a8c2da;
+    background: #eff6fc;
+}
+
+.st-key-tour-step-bar button:not(:disabled)[kind="secondary"]:hover,
+.st-key-previous_step button:not(:disabled):hover {
+    color: #163d65;
+    border-color: #487eb1;
+    background: #dcecf9;
+}
+
+.st-key-visit-filters {
+    background: #fff1e6;
+    border-color: #e9cdbb;
+}
+
+.st-key-distance-filters {
+    background: #edf5fc;
+    border-color: #bdd1e5;
+}
+
+.restaurant-preview {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.restaurant-preview th,
+.restaurant-preview td {
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid #e0e9f2;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.restaurant-preview th {
+    color: #204c78;
+    background: #e7f1fa;
+}
+
+.restaurant-preview .alternate {
+    color: #606670;
+    background: #f5f6f8;
+}
+
+.st-key-previous_step button,
+.st-key-next_step button {
+    min-height: 8rem;
+    padding-inline: 0.35rem;
+}
+
+.st-key-tour-step-bar .stMarkdownEllipsis,
+.st-key-previous_step .stMarkdownEllipsis,
+.st-key-next_step .stMarkdownEllipsis {
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@media (min-width: 901px) {
+    .st-key-tour-page-layout > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] {
+        min-height: calc(100dvh - 9rem);
+    }
+
+    .st-key-tour-page-layout > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:not(:nth-child(2)) {
+        position: sticky;
+        top: max(3.5rem, calc(50dvh - 4rem));
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 900px) {
+    .st-key-tour-page-layout > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .st-key-tour-page-layout > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .st-key-tour-page-layout > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .st-key-previous_step button,
+    .st-key-next_step button {
+        min-height: 3rem;
+    }
+}
+
 @media (max-width: 640px) {
     .stMainBlockContainer {
         padding-top: 3.5rem;
@@ -86,5 +197,9 @@
         inset-inline-end: -14%;
         width: 76%;
         opacity: 0.15;
+    }
+
+    .st-key-tour-step-bar [data-testid="stHorizontalBlock"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
